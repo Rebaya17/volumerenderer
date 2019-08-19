@@ -6,6 +6,12 @@
 #include <iostream>
 
 
+// Static const attributes
+
+// Unsigned short size
+const std::size_t VolumeLoader::USHORT_SIZE = sizeof(unsigned short);
+
+
 // Private constructors
 
 /** Volume loader constructor */
@@ -14,7 +20,9 @@ VolumeLoader::VolumeLoader(const std::string &path, const VolumeData::Format &fo
     volume_data(new VolumeData(path, format)),
 
     // Voxel data
-    voxel(nullptr) {}
+    voxel(nullptr),
+    size(0U),
+    step(0U) {}
 
 
 // Private methods
@@ -30,7 +38,7 @@ void VolumeLoader::load() {
 // Virtual volume loader destructor
 VolumeLoader::~VolumeLoader() {
     if (voxel != nullptr) {
-        delete voxel;
+        delete[] voxel;
     }
 }
 

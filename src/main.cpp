@@ -1,6 +1,10 @@
 #include "scene/gui/interactivescene.hpp"
+#include "volume/loader/volumedata.hpp"
+
+#include "dirsep.h"
 
 #include <iostream>
+
 
 /** Main function */
 int main (int argc, char **argv) {
@@ -17,6 +21,21 @@ int main (int argc, char **argv) {
         delete scene;
         return 1;
     }
+
+
+    // Set the background color
+    scene->setBackgroundColor(glm::vec3(0.45F, 0.55F, 0.60F));
+
+
+    // Setup directories
+    const std::string bin_path = argv[0];
+    const std::string relative = bin_path.substr(0U, bin_path.find_last_of(DIR_SEP) + 1U);
+
+    const std::string volume_path  = relative + ".." + DIR_SEP + "volume"  + DIR_SEP;
+
+
+    // Load the volume
+    scene->getVolume()->setPath(volume_path + "stagbeetle.dat", VolumeData::RAW);
 
 
     // Esecute the main loop
