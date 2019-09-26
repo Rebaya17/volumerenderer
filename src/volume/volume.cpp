@@ -194,15 +194,16 @@ void Volume::reload() {
     // Load if the path is not empty
     if (!path.empty()) {
         load();
+        resetGeometry();
     }
 }
 
 // Reset geometry
 void Volume::resetGeometry() {
-    // Set the default values
-    position = glm::vec3(0.0F);
+    // Center the volume into an unitary cube
+    dimension = glm::vec3(resolution) / static_cast<float>(glm::max(glm::max(resolution.x, resolution.y), resolution.z));
+    position = dimension / 2.0F;
     rotation = glm::quat(0.0F, 0.0F, 0.0F, 1.0F);
-    dimension = glm::vec3(1.0F);
 
     // Update matrices
     updateMatrices();
