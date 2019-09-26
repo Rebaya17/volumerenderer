@@ -25,7 +25,7 @@ void InteractiveScene::cursorPosCallback(GLFWwindow *window, double xpos, double
 
 // GLFW scroll callback
 void InteractiveScene::scrollCallback(GLFWwindow *window, double, double yoffset) {
-
+    static_cast<InteractiveScene *>(glfwGetWindowUserPointer(window))->camera->zoom(yoffset);
 }
 
 // GLFW key callback
