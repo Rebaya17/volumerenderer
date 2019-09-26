@@ -37,6 +37,12 @@ void InteractiveScene::keyCallback(GLFWwindow *window, int key, int, int action,
     InteractiveScene *const scene = static_cast<InteractiveScene *>(glfwGetWindowUserPointer(window));
 
     switch (key) {
+        // Toggle the camera boost
+        case GLFW_KEY_LEFT_SHIFT:
+        case GLFW_KEY_RIGHT_SHIFT:
+            Camera::setBoosted(pressed);
+            return;
+
         // Reload shaders
         case GLFW_KEY_R:
             if (pressed && (modifier == GLFW_MOD_CONTROL)) {
