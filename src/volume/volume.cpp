@@ -48,6 +48,7 @@ void Volume::updateMatrices() {
     // Update the volume matrix
     const glm::mat4 translation_rotation_mat = translation_mat * rotation_mat;
     model_mat  = translation_rotation_mat * scale_mat;
+    model_origin_mat = model_mat * origin_mat;
 }
 
 // Constructor
@@ -64,8 +65,10 @@ Volume::Volume() :
     rotation(glm::quat(0.0F, 0.0F, 0.0F, 1.0F)),
     dimension(1.0F),
 
-    // Matrix
-    model_mat(1.0F) {}
+    // Matrices
+    model_mat(1.0F),
+    origin_mat(1.0F),
+    model_origin_mat(1.0F) {}
 
 // Volume constructor
 Volume::Volume(const std::string &path, const VolumeData::Format &format) :
@@ -142,6 +145,11 @@ glm::mat4 Volume::getModelMatrix() const {
     return model_mat;
 }
 
+// Get the origin matrix
+glm::mat4 Volume::getOriginMatrix() const {
+    return origin_mat;
+}
+
 
 // Setters
 
@@ -200,10 +208,14 @@ void Volume::reload() {
 
 // Reset geometry
 void Volume::resetGeometry() {
-    // Center the volume into an unitary cube
-    dimension = glm::vec3(resolution) / static_cast<float>(glm::max(glm::max(resolution.x, resolution.y), resolution.z));
-    position = dimension / 2.0F;
+    // Setup the origin matrix
+    const glm::vec3 scale = glm::vec3(resolution) / static_cast<float>(glm::max(glm::max(resolution.x, resolution.y), resolution.z));
+    origin_mat = glm::translate(glm::scale(glm::mat4(1.0F), scale), glm::vec3(-0.5F));
+
+    // Set the default values
+    position = glm::vec3(0.0F);
     rotation = glm::quat(0.0F, 0.0F, 0.0F, 1.0F);
+    dimension = glm::vec3(1.0F);
 
     // Update matrices
     updateMatrices();
@@ -221,7 +233,7 @@ void Volume::draw(GLSLProgram *const program) const {
     program->use();
 
     // Set volume uniforms
-    program->setUniform("u_model_mat", model_mat);
+    program->setUniform("u_model_mat", model_origin_mat);
     program->setUniform("u_tex", 0);
 
     // Bind the vertex array object

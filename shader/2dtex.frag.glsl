@@ -20,6 +20,10 @@ void main () {
     // Get the data from the texture
     float val = texture(u_tex, vertex.uv_coord).r;
 
+    if (val < 0.2F) {
+        discard;
+    }
+
     // Set the normal as color
     color = vec4(val);
 }
