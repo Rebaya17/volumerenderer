@@ -18,13 +18,8 @@ in Vertex {
 // Main function
 void main () {
     // Get the data from the texture
-    float val = texture(u_tex, vertex.uv_coord).r;;
-
-    // Discard out of range
-    if (val < 0.2F || val > 0.8F) {
-        discard;
-    }
+    float val = texture(u_tex, vertex.uv_coord).r;
 
     // Set the normal as color
-    color = vec4(vec3(val), 1.0F);
+    color = vec4(val);
 }
