@@ -14,7 +14,7 @@ int main (int argc, char **argv) {
     }
 
     // Create the scene and check it
-    InteractiveScene *scene = new InteractiveScene("OBJViewer");
+    InteractiveScene *scene = new InteractiveScene("VolumeRenderers");
 
     // Exit with error if the scene is not valid
     if (!scene->isValid()) {
@@ -23,19 +23,20 @@ int main (int argc, char **argv) {
     }
 
 
-    // Set the background color
+    // Set the background color and camera
     scene->setBackgroundColor(glm::vec3(0.45F, 0.55F, 0.60F));
-
+    scene->getCamera()->setOrthogonal(true);
 
     // Setup directories
     const std::string bin_path = argv[0];
     const std::string relative = bin_path.substr(0U, bin_path.find_last_of(DIR_SEP) + 1U);
 
-    const std::string volume_path  = relative + ".." + DIR_SEP + "volume"  + DIR_SEP;
+    const std::string volume_path = relative + ".." + DIR_SEP + "volume" + DIR_SEP;
+    const std::string shader_path = relative + ".." + DIR_SEP + "shader" + DIR_SEP;
 
-
-    // Load the volume
-    scene->getVolume()->setPath(volume_path + "stagbeetle.dat", VolumeData::RAW);
+    // Set the program and volume
+    scene->getProgram()->link(shader_path + "common.vert.glsl", shader_path + "2dtex.frag.glsl");
+    scene->getVolume()->setPath(volume_path + "carp.dat", VolumeData::RAW);
 
 
     // Esecute the main loop

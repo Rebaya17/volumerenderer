@@ -36,13 +36,10 @@ class VolumeLoader {
         VolumeData *volume_data;
 
         /** Voxel data */
-        unsigned short *voxel;
+        GLushort *voxel;
 
         /** Voxel data size */
         std::size_t size;
-
-        /** Voxel data YZ plane step */
-        std::size_t step;
 
 
         // Methods
@@ -52,12 +49,6 @@ class VolumeLoader {
 
         /** Load data to the GPU */
         void load();
-
-
-        // Static const attributes
-
-        /** Unsigned short size */
-        static const std::size_t USHORT_SIZE;
 
 
     public:

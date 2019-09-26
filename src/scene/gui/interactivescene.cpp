@@ -115,6 +115,9 @@ void InteractiveScene::mainLoop() {
         drawScene();
         drawGUI();
 
+        // Process the keyboard input
+        processKeyboardInput();
+
         // Poll events and swap buffers
         glfwPollEvents();
         glfwSwapBuffers(window);

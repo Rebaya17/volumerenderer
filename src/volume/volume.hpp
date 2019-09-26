@@ -37,9 +37,6 @@ class Volume : private VolumeData {
         /** Model matrix */
         glm::mat4 model_mat;
 
-        /** Normal matrix */
-        glm::mat3 normal_mat;
-
 
         // Constructors
 
@@ -107,9 +104,6 @@ class Volume : private VolumeData {
 
         /** Get the model matrix */
         glm::mat4 getModelMatrix() const;
-
-        /** Get the normal matrix */
-        glm::mat4 getNormalMatrix() const;
 
 
         // Setters

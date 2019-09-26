@@ -41,6 +41,9 @@ void Scene::errorCallback(int error, const char *description) {
 
 // GLFW framebuffer size callback
 void Scene::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
+    // Resize viewport
+    glViewport(0, 0, width, height);
+
     // Get the scene and update the window resolution
     Scene *const scene = static_cast<Scene *>(glfwGetWindowUserPointer(window));
     scene->width = width;
@@ -57,6 +60,12 @@ void Scene::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
 void Scene::drawScene() {
     // Clear color and depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Check the volume
+    if (volume->isOpen()) {
+        camera->bind(program);
+        volume->draw(program);
+    }
 }
 
 
@@ -114,12 +123,8 @@ Scene::Scene(const std::string &title, const int &width, const int &height, cons
 
     // Setup the context
     else {
-        // Set the user pointer to this scene and setup callbacks
+        // Set the user pointer to this scene and setup the current context
         glfwSetWindowUserPointer(window, this);
-        glfwSetFramebufferSizeCallback(window, Scene::framebufferSizeCallback);
-
-        // Maximize window and setup as the current context
-        glfwMaximizeWindow(window);
         glfwMakeContextCurrent(window);
 
         // Initialize Glad and check errors
@@ -142,23 +147,20 @@ Scene::Scene(const std::string &title, const int &width, const int &height, cons
             Scene::opengl_version  = glGetString(GL_VERSION);
             Scene::glsl_version    = glGetString(GL_SHADING_LANGUAGE_VERSION);
 
+            // Create the default objects
+            camera = new Camera(width, height);
+            volume = new Volume();
+            program = new GLSLProgram();
+
+            // Set the resize window callback and maximize window
+            glfwSetFramebufferSizeCallback(window, Scene::framebufferSizeCallback);
+            glfwMaximizeWindow(window);
+
             // Setup the swap interval
             glfwSwapInterval(1);
 
             // Enable depth test
             glEnable(GL_DEPTH_TEST);
-
-
-            // Create the default objects
-
-            // Create the camera
-            camera = new Camera(width, height);
-
-            // Create an empty volume
-            volume = new Volume();
-
-            // Create an empty program
-            program = new GLSLProgram();
         }
     }
 

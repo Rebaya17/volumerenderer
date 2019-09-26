@@ -13,4 +13,22 @@ VolumeData::VolumeData(const std::string &path, const VolumeData::Format &format
     format(format),
     
     // Resolution
-    resolution(0U) {}
+    resolution(0U),
+
+    // Buffers
+    vao(GL_FALSE),
+    vbo(GL_FALSE),
+
+    // Textures array
+    texture(nullptr) {}
+
+
+// Destructor
+
+// Volume data destructor
+VolumeData::~VolumeData() {
+    if (texture != nullptr) {
+        glDeleteTextures(resolution.z, texture);
+        delete[] texture;
+    }
+}

@@ -16,8 +16,15 @@ void Volume::load() {
     // Set the resolution
     resolution = volume_data->resolution;
 
+    // Set the buffers
+    vao = volume_data->vao;
+    vbo = volume_data->vbo;
+
+    // Set the textures
+    texture = volume_data->texture;
 
     // Clean up the loader data
+    volume_data->texture = nullptr;
     delete volume_data;
 }
 
@@ -30,7 +37,7 @@ void Volume::clear() {
     resolution = glm::uvec3(0U);
 }
 
-// Update the volume and normal matrices
+// Update the volume matrix
 void Volume::updateMatrices() {
     // Get the transformation matrices
     const glm::mat4 identity = glm::mat4(1.0F);
@@ -38,10 +45,9 @@ void Volume::updateMatrices() {
     const glm::mat4 rotation_mat    = glm::mat4_cast(rotation);
     const glm::mat4 scale_mat       = glm::scale(identity, dimension);
 
-    // Update the model and normal matrix
+    // Update the volume matrix
     const glm::mat4 translation_rotation_mat = translation_mat * rotation_mat;
     model_mat  = translation_rotation_mat * scale_mat;
-    normal_mat = glm::inverse(glm::transpose(translation_rotation_mat));
 }
 
 // Constructor
@@ -55,12 +61,11 @@ Volume::Volume() :
 
     // Geometry
     position(0.0F),
-    rotation(glm::quat()),
+    rotation(glm::quat(0.0F, 0.0F, 0.0F, 1.0F)),
     dimension(1.0F),
 
-    // Matrices
-    model_mat(1.0F),
-    normal_mat(1.0F) {}
+    // Matrix
+    model_mat(1.0F) {}
 
 // Volume constructor
 Volume::Volume(const std::string &path, const VolumeData::Format &format) :
@@ -74,9 +79,8 @@ Volume::Volume(const std::string &path, const VolumeData::Format &format) :
     rotation(glm::quat()),
     dimension(1.0F),
 
-    // Matrices
-    model_mat(1.0F),
-    normal_mat(1.0F) {
+    // Matrix
+    model_mat(1.0F) {
     // Load the volume
     load();
 }
@@ -138,11 +142,6 @@ glm::mat4 Volume::getModelMatrix() const {
     return model_mat;
 }
 
-// Get the normal matrix
-glm::mat4 Volume::getNormalMatrix() const {
-    return normal_mat;
-}
-
 
 // Setters
 
@@ -202,7 +201,7 @@ void Volume::reload() {
 void Volume::resetGeometry() {
     // Set the default values
     position = glm::vec3(0.0F);
-    rotation = glm::quat();
+    rotation = glm::quat(0.0F, 0.0F, 0.0F, 1.0F);
     dimension = glm::vec3(1.0F);
 
     // Update matrices
@@ -222,9 +221,22 @@ void Volume::draw(GLSLProgram *const program) const {
 
     // Set volume uniforms
     program->setUniform("u_model_mat", model_mat);
-    program->setUniform("u_normal_mat", normal_mat);
+    program->setUniform("u_tex", 0);
+
+    // Bind the vertex array object
+    glBindVertexArray(vao);
 
     // Draw the volume
+    for (unsigned int i = 0; i < resolution.z; i++) {
+        // Set the slice position
+        program->setUniform("slice", static_cast<GLfloat>(i) / static_cast<GLfloat>(resolution.z));
+
+        // Bind texture
+        glBindTexture(GL_TEXTURE_2D, texture[i]);
+
+        // Draw square
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    }
 
     // Unbind the vertex array object
     glBindVertexArray(GL_FALSE);

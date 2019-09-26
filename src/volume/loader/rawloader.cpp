@@ -18,19 +18,17 @@ bool RAWLoader::read() {
     }
 
     // Read the resolution
-    unsigned short resolution[3];
-    file.read(reinterpret_cast<char *>(&resolution[0]), VolumeLoader::USHORT_SIZE * 3U);
-    volume_data->resolution.x = static_cast<unsigned int>(resolution[0]);
-    volume_data->resolution.y = static_cast<unsigned int>(resolution[1]);
-    volume_data->resolution.z = static_cast<unsigned int>(resolution[2]);
-
-    // Set the YZ step and the voxel data size
-    step = static_cast<std::size_t>(resolution[1]) * static_cast<std::size_t>(resolution[2]);
-    size = static_cast<std::size_t>(resolution[0]) * step;
+    volume_data->resolution.x = 256U;
+    volume_data->resolution.y = 256U;
+    volume_data->resolution.z = 512U;
 
     // Read the voxel data
-    voxel = new unsigned short[size];
-    file.read(reinterpret_cast<char *>(&voxel[0]), VolumeLoader::USHORT_SIZE * size);
+    size = static_cast<std::size_t>(volume_data->resolution.x * volume_data->resolution.y * volume_data->resolution.z);
+    voxel = new GLushort[size];
+    file.read(reinterpret_cast<char *>(voxel), sizeof(GLushort) * size);
+
+    // Close the file and set the volume open
+    file.close();
 
     return true;
 }
