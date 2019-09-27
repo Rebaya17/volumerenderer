@@ -36,7 +36,7 @@ int main (int argc, char **argv) {
 
     // Set the program and volume
     scene->getProgram()->link(shader_path + "common.vert.glsl", shader_path + "2dtex.frag.glsl");
-    scene->getVolume()->setPath(volume_path + "carp.dat", VolumeData::RAW);
+    scene->getVolume()->setPath(volume_path + "carp.dat", VolumeData::RAW16, 256, 256, 512);
 
 
     // Esecute the main loop

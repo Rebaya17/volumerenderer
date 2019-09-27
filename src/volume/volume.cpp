@@ -8,7 +8,7 @@
 // Load the volume from the volume path
 void Volume::load() {
     // Load the volume
-    VolumeData *volume_data = VolumeLoader::load(path, format);
+    VolumeData *volume_data = VolumeLoader::load(path, format, resolution.x, resolution.y, resolution.z);
 
     // Set the open statuses
     open = volume_data->open;
@@ -30,11 +30,7 @@ void Volume::load() {
 
 // Makes the volume empty
 void Volume::clear() {
-    // Open statuses
     open = false;
-
-    // Resolution
-    resolution = glm::uvec3(0U);
 }
 
 // Update the volume matrix
@@ -115,7 +111,7 @@ std::string Volume::getName() const {
 
 // Get the resolution
 glm::uvec3 Volume::getResolution() const {
-    return resolution;
+    return open ? resolution : glm::uvec3();
 }
 
 
@@ -160,9 +156,12 @@ void Volume::setEnabled(const bool &status) {
 
 
 // Set the new path
-void Volume::setPath(const std::string &new_path, const VolumeData::Format &new_format) {
+void Volume::setPath(const std::string &new_path, const VolumeData::Format &new_format, const unsigned int &width, const unsigned int &height, const unsigned int &depth) {
     path = new_path;
     format = new_format;
+    resolution.x = width;
+    resolution.y = height;
+    resolution.z = depth;
     reload();
 }
 
@@ -213,7 +212,7 @@ void Volume::resetGeometry() {
     origin_mat = glm::translate(glm::scale(glm::mat4(1.0F), scale), glm::vec3(-0.5F));
 
     // Set the default values
-    position = glm::vec3(0.0F);
+    position = glm::vec3();
     rotation = glm::quat(0.0F, 0.0F, 0.0F, 1.0F);
     dimension = glm::vec3(1.0F);
 

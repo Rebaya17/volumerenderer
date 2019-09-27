@@ -27,8 +27,11 @@ class VolumeData {
         
         /** Formats */
         enum Format {
-            /** RAW */
-            RAW,
+            /** RAW 8 bits */
+            RAW8,
+
+            /** RAW 16 bits */
+            RAW16,
 
             /** PVM */
             PVM,

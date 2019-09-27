@@ -122,7 +122,7 @@ class Volume : private VolumeData {
 
 
         /** Set the new path */
-        void setPath(const std::string &new_path, const VolumeData::Format &new_format = VolumeData::UNKOWN);
+        void setPath(const std::string &new_path, const VolumeData::Format &new_format = VolumeData::UNKOWN, const unsigned int &width = 0U, const unsigned int &height = 0U, const unsigned int &depth = 0U);
 
 
         /** Set the new position */

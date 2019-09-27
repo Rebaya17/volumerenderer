@@ -37,6 +37,7 @@ void VolumeLoader::load() {
     };
 
     // Generate and load textures
+    const GLenum bytes = volume_data->format == VolumeData::RAW8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT;
     volume_data->texture = new GLuint[z];
     glGenTextures(x, volume_data->texture);
     for (unsigned int i = 0; i < z; i++) {
@@ -50,7 +51,7 @@ void VolumeLoader::load() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
         // Load texture
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, x, y, 0, GL_RED, GL_UNSIGNED_SHORT, &voxel[i * xy]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, x, y, 0, GL_RED, bytes, &voxel[i * xy]);
 
         // Unbind texture
         glBindTexture(GL_TEXTURE_2D, GL_FALSE);
@@ -87,14 +88,15 @@ VolumeLoader::~VolumeLoader() {
 // Public static methods
 
 // Read and load data
-VolumeData *VolumeLoader::load(const std::string &path, const VolumeData::Format &format) {
+VolumeData *VolumeLoader::load(const std::string &path, const VolumeData::Format &format, const unsigned int &width, const unsigned int &height, const unsigned int &depth) {
     // Create a null volume loader
     VolumeLoader *loader = nullptr;
 
     // Instanciate the loader
     switch (format) {
-        // RAW format
-        case VolumeData::RAW: loader = static_cast<VolumeLoader *>(new RAWLoader(path, format)); break;
+        // RAW formats
+        case VolumeData::RAW8:
+        case VolumeData::RAW16: loader = static_cast<VolumeLoader *>(new RAWLoader(path, format)); break;
         
         // PVM format
         case VolumeData::PVM: loader = static_cast<VolumeLoader *>(new PVMLoader(path, format)); break;
@@ -106,7 +108,7 @@ VolumeData *VolumeLoader::load(const std::string &path, const VolumeData::Format
     }
 
     // Read and load data
-    if (loader->read()) {
+    if (loader->read(width, height, depth)) {
         loader->volume_data->open = true;
         loader->load();
     }

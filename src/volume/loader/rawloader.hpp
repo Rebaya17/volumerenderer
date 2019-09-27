@@ -10,7 +10,7 @@ class RAWLoader : public VolumeLoader {
         // Methods
 
         /** Read file */
-        virtual bool read();
+        virtual bool read(const unsigned int &width = 0U, const unsigned int &height = 0U, const unsigned int &depth = 0U);
 
 
     public:
