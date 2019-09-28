@@ -69,7 +69,7 @@ void InteractiveScene::scrollCallback(GLFWwindow *window, double, double yoffset
 }
 
 // GLFW key callback
-void InteractiveScene::keyCallback(GLFWwindow *window, int key, int, int action, int modifier) {
+void InteractiveScene::keyCallback(GLFWwindow *window, int key, int, int action, int) {
     // Get the pressed status
     const bool pressed = action != GLFW_RELEASE;
 
@@ -78,15 +78,29 @@ void InteractiveScene::keyCallback(GLFWwindow *window, int key, int, int action,
 
     // Options
     switch (key) {
+        // Toggle the camera perspective
+        case GLFW_KEY_P:
+            if (pressed) {
+                scene->camera->setOrthogonal(!scene->camera->isOrthogonal());
+            }
+            return;
+
         // Toggle the camera boost
         case GLFW_KEY_LEFT_SHIFT:
         case GLFW_KEY_RIGHT_SHIFT:
             Camera::setBoosted(pressed);
             return;
 
-        // Reload shaders
-        case GLFW_KEY_R:
-            if (pressed && (modifier == GLFW_MOD_CONTROL)) {
+        // Reload volume
+        case GLFW_KEY_F5:
+            if (pressed) {
+                scene->volume->reload();
+            }
+            return;
+
+        // Reload program
+        case GLFW_KEY_F6:
+            if (pressed) {
                 scene->program->link();
             }
     }

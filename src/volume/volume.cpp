@@ -27,6 +27,8 @@ void Volume::load() {
     tex_dim = glm::vec3(resolution) / diagonal;
 
     // Clean up the loader data
+    volume_data->vao = GL_FALSE;
+    volume_data->vbo = GL_FALSE;
     volume_data->texture = GL_FALSE;
     delete volume_data;
 }
@@ -35,6 +37,31 @@ void Volume::load() {
 void Volume::clear() {
     // Set not open
     open = false;
+
+    // Clear path
+    path.clear();
+
+    // Geometry
+    position = glm::vec3(0.0F);
+    rotation = glm::quat(1.0F, 0.0F, 0.0F, 0.0F);
+    dimension = glm::vec3(1.0F);
+
+    // Buffers
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &vao);
+
+    // Reset buffers
+    vao = GL_FALSE;
+    vbo = GL_FALSE;
+
+    // Texture
+    glDeleteTextures(1, &texture);
+    texture = GL_FALSE;
+
+    // Texture attributes
+    step = 1.0F;
+    diagonal = 0.0F;
+    tex_dim = glm::vec3(0.0F);
 
     // Reset the transfer function
     transfer_function->reset();
@@ -66,7 +93,7 @@ Volume::Volume() :
 
     // Texture
     diagonal(0.0F),
-    step(0.0F),
+    step(1.0F),
     tex_dim(0.0F),
 
     // Transfer function
@@ -90,7 +117,7 @@ Volume::Volume(const std::string &path, const VolumeData::Format &format) :
 
     // Texture
     diagonal(0.0F),
-    step(0.0F),
+    step(1.0F),
     tex_dim(0.0F),
 
     // Transfer function
@@ -130,28 +157,28 @@ std::string Volume::getName() const {
 
 // Get the resolution
 glm::uvec3 Volume::getResolution() const {
-    return open ? resolution : glm::uvec3();
+    return resolution;
 }
 
 
 // Get the position
 glm::vec3 Volume::getPosition() const {
-    return open ? position : glm::vec3();
+    return position;
 }
 
 // Get the rotation quaternion
 glm::quat Volume::getRotation() const {
-    return open ? rotation : glm::quat(1.0F, 0.0F, 0.0F, 0.0F);
+    return rotation;
 }
 
 // Get the rotation angles
 glm::vec3 Volume::getRotationAngles() const {
-    return glm::degrees(glm::eulerAngles(open ? rotation : glm::quat(1.0F, 0.0F, 0.0F, 0.0F)));
+    return glm::degrees(glm::eulerAngles(rotation));
 }
 
 // Get the scale
 glm::vec3 Volume::getScale() const {
-    return open ? dimension : glm::vec3(1.0F);
+    return dimension;
 }
 
 
@@ -182,6 +209,9 @@ void Volume::setEnabled(const bool &status) {
 
 // Set the new path
 void Volume::setPath(const std::string &new_path, const VolumeData::Format &new_format, const unsigned int &width, const unsigned int &height, const unsigned int &depth) {
+    // Clear the volume data
+    clear();
+
     // Set the given values
     path = new_path;
     format = new_format;
@@ -189,8 +219,11 @@ void Volume::setPath(const std::string &new_path, const VolumeData::Format &new_
     resolution.y = height;
     resolution.z = depth;
 
-    // Reload with the new values
-    reload();
+    // Load if the path is not empty
+    if (!path.empty()) {
+        load();
+        resetGeometry();
+    }
 }
 
 
@@ -223,9 +256,6 @@ void Volume::setScale(const glm::vec3 &new_scale) {
 
 // Reload volume
 void Volume::reload() {
-    // Clear the volume data
-    clear();
-
     // Load if the path is not empty
     if (!path.empty()) {
         load();
