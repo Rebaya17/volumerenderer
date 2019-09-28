@@ -20,8 +20,11 @@ void Volume::load() {
     vao = volume_data->vao;
     vbo = volume_data->vbo;
 
-    // Set the textures
+    // Set the texture
     texture = volume_data->texture;
+    diagonal = glm::length(glm::vec3(resolution));
+    step = 1.0F / diagonal;
+    tex_dim = glm::vec3(resolution) / diagonal;
 
     // Clean up the loader data
     volume_data->texture = GL_FALSE;
@@ -40,7 +43,7 @@ void Volume::updateMatrices() {
 
     // Update the matrices
     model_mat = glm::scale(glm::translate(identity, position), dimension);
-    volume_mat = glm::inverse(glm::mat4_cast(rotation) * glm::translate(glm::scale(identity, glm::vec3(resolution) / glm::length(glm::vec3(resolution))), glm::vec3(-0.5F)));
+    volume_mat = glm::inverse(glm::mat4_cast(rotation) * glm::translate(glm::scale(identity, tex_dim), glm::vec3(-0.5F)));
 }
 
 // Constructor
@@ -57,6 +60,11 @@ Volume::Volume() :
     rotation(glm::quat(1.0F, 0.0F, 0.0F, 0.0F)),
     dimension(1.0F),
 
+    // Texture
+    diagonal(0.0F),
+    step(0.0F),
+    tex_dim(0.0F),
+
     // Matrices
     model_mat(1.0F),
     volume_mat(1.0F) {}
@@ -72,6 +80,11 @@ Volume::Volume(const std::string &path, const VolumeData::Format &format) :
     position(0.0F),
     rotation(1.0F, 0.0F, 0.0F, 0.0F),
     dimension(1.0F),
+
+    // Texture
+    diagonal(0.0F),
+    step(0.0F),
+    tex_dim(0.0F),
 
     // Matrices
     model_mat(1.0F),
@@ -233,9 +246,9 @@ void Volume::draw(GLSLProgram *const program) const {
     glBindTexture(GL_TEXTURE_3D, texture);
 
     // Draw the volume slices
-    for (unsigned int i = 0; i < resolution.z; i++) {
+    for (float i = -0.5F; i < 0.5F; i += step) {
         // Set the slice position
-        program->setUniform("u_slice", static_cast<GLfloat>(i) / static_cast<GLfloat>(resolution.z));
+        program->setUniform("u_slice", i);
 
         // Draw square
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

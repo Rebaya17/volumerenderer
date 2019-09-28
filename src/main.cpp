@@ -25,7 +25,6 @@ int main (int argc, char **argv) {
 
     // Set the background color and camera
     scene->setBackgroundColor(glm::vec3(0.45F, 0.55F, 0.60F));
-    scene->getCamera()->setOrthogonal(true);
 
     // Setup directories
     const std::string bin_path = argv[0];

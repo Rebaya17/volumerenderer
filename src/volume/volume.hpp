@@ -34,6 +34,16 @@ class Volume : private VolumeData {
         glm::vec3 dimension;
 
 
+        /** Diagonal */
+        float diagonal;
+
+        /** Step */
+        float step;
+
+        /** Texture dimensions */
+        glm::vec3 tex_dim;
+
+
         /** Model matrix */
         glm::mat4 model_mat;
 
