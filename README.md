@@ -6,15 +6,15 @@ Another volume data set renderer.
 ## Features
 
 - [ ] Volume data set loading
-  - [ ] RAW
+  - [x] RAW
   - [ ] PVM
 - [ ] Texture based techniques
   - [ ] 2D textures: Model aligned planes
-  - [ ] 3D textures: Viewport aligned polygons
+  - [x] 3D textures: Viewport aligned polygons
 - [ ] Ray casting
   - [ ] CPU
   - [ ] GPU
-- [ ] Built-in transfer function creation GUI
+- [ ] Built-in transfer function GUI editor
 
 
 # Resources
