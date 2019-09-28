@@ -24,7 +24,7 @@ void Volume::load() {
     texture = volume_data->texture;
 
     // Clean up the loader data
-    volume_data->texture = nullptr;
+    volume_data->texture = GL_FALSE;
     delete volume_data;
 }
 
@@ -33,18 +33,14 @@ void Volume::clear() {
     open = false;
 }
 
-// Update the volume matrix
+// Update the matrices
 void Volume::updateMatrices() {
-    // Get the transformation matrices
+    // Identity matrix
     const glm::mat4 identity = glm::mat4(1.0F);
-    const glm::mat4 translation_mat = glm::translate(identity, position);
-    const glm::mat4 rotation_mat    = glm::mat4_cast(rotation);
-    const glm::mat4 scale_mat       = glm::scale(identity, dimension);
 
-    // Update the volume matrix
-    const glm::mat4 translation_rotation_mat = translation_mat * rotation_mat;
-    model_mat  = translation_rotation_mat * scale_mat;
-    model_origin_mat = model_mat * origin_mat;
+    // Update the matrices
+    model_mat = glm::scale(glm::translate(identity, position), dimension);
+    volume_mat = glm::inverse(glm::mat4_cast(rotation) * glm::translate(glm::scale(identity, glm::vec3(resolution) / glm::length(glm::vec3(resolution))), glm::vec3(-0.5F)));
 }
 
 // Constructor
@@ -58,13 +54,12 @@ Volume::Volume() :
 
     // Geometry
     position(0.0F),
-    rotation(glm::quat(0.0F, 0.0F, 0.0F, 1.0F)),
+    rotation(glm::quat(1.0F, 0.0F, 0.0F, 0.0F)),
     dimension(1.0F),
 
     // Matrices
     model_mat(1.0F),
-    origin_mat(1.0F),
-    model_origin_mat(1.0F) {}
+    volume_mat(1.0F) {}
 
 // Volume constructor
 Volume::Volume(const std::string &path, const VolumeData::Format &format) :
@@ -75,11 +70,12 @@ Volume::Volume(const std::string &path, const VolumeData::Format &format) :
 
     // Geometry
     position(0.0F),
-    rotation(glm::quat()),
+    rotation(1.0F, 0.0F, 0.0F, 0.0F),
     dimension(1.0F),
 
-    // Matrix
-    model_mat(1.0F) {
+    // Matrices
+    model_mat(1.0F),
+    volume_mat(1.0F) {
     // Load the volume
     load();
 }
@@ -117,12 +113,12 @@ glm::uvec3 Volume::getResolution() const {
 
 // Get the position
 glm::vec3 Volume::getPosition() const {
-    return position;
+    return open ? position : glm::vec3();
 }
 
 // Get the rotation quaternion
 glm::quat Volume::getRotation() const {
-    return rotation;
+    return open ? rotation : glm::quat(0.0F, 0.0F, 0.0F, 1.0F);
 }
 
 // Get the rotation angles
@@ -136,14 +132,14 @@ glm::vec3 Volume::getScale() const {
 }
 
 
-// Get the volume matrix
+// Get the model matrix
 glm::mat4 Volume::getModelMatrix() const {
     return model_mat;
 }
 
-// Get the origin matrix
-glm::mat4 Volume::getOriginMatrix() const {
-    return origin_mat;
+// Get the Volume matrix
+glm::mat4 Volume::getVolumeMatrix() const {
+    return volume_mat;
 }
 
 
@@ -207,13 +203,9 @@ void Volume::reload() {
 
 // Reset geometry
 void Volume::resetGeometry() {
-    // Setup the origin matrix
-    const glm::vec3 scale = glm::vec3(resolution) / static_cast<float>(glm::max(glm::max(resolution.x, resolution.y), resolution.z));
-    origin_mat = glm::translate(glm::scale(glm::mat4(1.0F), scale), glm::vec3(-0.5F));
-
     // Set the default values
-    position = glm::vec3();
-    rotation = glm::quat(0.0F, 0.0F, 0.0F, 1.0F);
+    position = glm::vec3(0.0F);
+    rotation = glm::quat(1.0F, 0.0F, 0.0F, 0.0F);
     dimension = glm::vec3(1.0F);
 
     // Update matrices
@@ -232,25 +224,25 @@ void Volume::draw(GLSLProgram *const program) const {
     program->use();
 
     // Set volume uniforms
-    program->setUniform("u_model_mat", model_origin_mat);
-    program->setUniform("u_tex", 0);
+    program->setUniform("u_model_mat", model_mat);
+    program->setUniform("u_volume_mat", volume_mat);
+    program->setUniform("u_tex", GL_TEXTURE0);
 
-    // Bind the vertex array object
+    // Bind the vertex array object and texture
     glBindVertexArray(vao);
+    glBindTexture(GL_TEXTURE_3D, texture);
 
-    // Draw the volume
+    // Draw the volume slices
     for (unsigned int i = 0; i < resolution.z; i++) {
         // Set the slice position
-        program->setUniform("slice", static_cast<GLfloat>(i) / static_cast<GLfloat>(resolution.z));
-
-        // Bind texture
-        glBindTexture(GL_TEXTURE_2D, texture[i]);
+        program->setUniform("u_slice", static_cast<GLfloat>(i) / static_cast<GLfloat>(resolution.z));
 
         // Draw square
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
 
-    // Unbind the vertex array object
+    // Unbind the vertex array object and texture
+    glBindTexture(GL_TEXTURE_3D, GL_FALSE);
     glBindVertexArray(GL_FALSE);
 }
 

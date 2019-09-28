@@ -66,7 +66,7 @@ class VolumeData {
 
 
         /** Textures array */
-        GLuint *texture;
+        GLuint texture;
 
 
         // Constructor

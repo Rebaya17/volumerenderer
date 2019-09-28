@@ -5,24 +5,17 @@ out vec4 color;
 
 
 // Uniform variables
-uniform sampler2D u_tex;
+uniform sampler3D u_tex;
 
 
 // In variables
-in Vertex {
-    vec3 position;
-    vec2 uv_coord;
-} vertex;
+in vec3 tex_coord;
 
 
 // Main function
 void main () {
     // Get the data from the texture
-    float val = texture(u_tex, vertex.uv_coord).r;
-
-    if (val < 0.2F) {
-        discard;
-    }
+    float val = texture(u_tex, tex_coord).r;
 
     // Set the normal as color
     color = vec4(val);

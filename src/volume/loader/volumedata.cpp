@@ -20,15 +20,15 @@ VolumeData::VolumeData(const std::string &path, const VolumeData::Format &format
     vbo(GL_FALSE),
 
     // Textures array
-    texture(nullptr) {}
+    texture(GL_FALSE) {}
 
 
 // Destructor
 
 // Volume data destructor
 VolumeData::~VolumeData() {
-    if (texture != nullptr) {
-        glDeleteTextures(resolution.z, texture);
-        delete[] texture;
+    if (texture != GL_FALSE) {
+        glDeleteTextures(1, &texture);
+        texture = GL_FALSE;
     }
 }

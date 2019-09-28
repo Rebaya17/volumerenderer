@@ -22,40 +22,29 @@ VolumeLoader::VolumeLoader(const std::string &path, const VolumeData::Format &fo
 
 // Load data to GPU
 void VolumeLoader::load() {
-    // Resolution information
+    // Generate and load textures
+    const GLenum bytes = volume_data->format == VolumeData::RAW8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT;
+    glGenTextures(1, &volume_data->texture);
+
+    // Bind texture
+    glBindTexture(GL_TEXTURE_3D, volume_data->texture);
+
+    // Texture parameters
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    // Load texture
     const unsigned int x = volume_data->resolution.x;
     const unsigned int y = volume_data->resolution.y;
     const unsigned int z = volume_data->resolution.z;
-    const unsigned int xy = x * y;
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, x, y, z, 0, GL_RED, bytes, voxel);
 
-    // Squares YZ data
-    const GLfloat square[] = {
-        0.0F, 0.0F,
-        0.0F, 1.0F,
-        1.0F, 0.0F,
-        1.0F, 1.0F,
-    };
+    // Unbind texture
+    glBindTexture(GL_TEXTURE_2D, GL_FALSE);
 
-    // Generate and load textures
-    const GLenum bytes = volume_data->format == VolumeData::RAW8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT;
-    volume_data->texture = new GLuint[z];
-    glGenTextures(x, volume_data->texture);
-    for (unsigned int i = 0; i < z; i++) {
-        // Bind texture
-        glBindTexture(GL_TEXTURE_2D, volume_data->texture[i]);
-
-        // Texture parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-        // Load texture
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, x, y, 0, GL_RED, bytes, &voxel[i * xy]);
-
-        // Unbind texture
-        glBindTexture(GL_TEXTURE_2D, GL_FALSE);
-    }
 
     // Vertex array object
     glGenVertexArrays(1, &volume_data->vao);
@@ -64,6 +53,9 @@ void VolumeLoader::load() {
     // Vertex buffer object
     glGenBuffers(1, &volume_data->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, volume_data->vbo);
+
+    // XY square data to draw as triangle strip
+    const GLfloat square[] = {-0.5F, -0.5F, -0.5F, 0.5F, 0.5F, -0.5F, 0.5F, 0.5F};
     glBufferData(GL_ARRAY_BUFFER, sizeof(square), square, GL_STATIC_DRAW);
 
     // Position attribute

@@ -37,11 +37,8 @@ class Volume : private VolumeData {
         /** Model matrix */
         glm::mat4 model_mat;
 
-        /** Origin matrix */
-        glm::mat4 origin_mat;
-
-        /** Model origin matrix */
-        glm::mat4 model_origin_mat;
+        /** Model matrix */
+        glm::mat4 volume_mat;
 
 
         // Constructors
@@ -111,8 +108,8 @@ class Volume : private VolumeData {
         /** Get the model matrix */
         glm::mat4 getModelMatrix() const;
 
-        /** Get the origin matrix */
-        glm::mat4 getOriginMatrix() const;
+        /** Get the volume matrix */
+        glm::mat4 getVolumeMatrix() const;
 
 
         // Setters
