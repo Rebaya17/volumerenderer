@@ -34,11 +34,21 @@ class Volume : private VolumeData {
         glm::vec3 dimension;
 
 
+        /** Diagonal */
+        float diagonal;
+
+        /** Step */
+        float step;
+
+        /** Texture dimensions */
+        glm::vec3 tex_dim;
+
+
         /** Model matrix */
         glm::mat4 model_mat;
 
-        /** Normal matrix */
-        glm::mat3 normal_mat;
+        /** Model matrix */
+        glm::mat4 volume_mat;
 
 
         // Constructors
@@ -108,8 +118,8 @@ class Volume : private VolumeData {
         /** Get the model matrix */
         glm::mat4 getModelMatrix() const;
 
-        /** Get the normal matrix */
-        glm::mat4 getNormalMatrix() const;
+        /** Get the volume matrix */
+        glm::mat4 getVolumeMatrix() const;
 
 
         // Setters
@@ -119,7 +129,7 @@ class Volume : private VolumeData {
 
 
         /** Set the new path */
-        void setPath(const std::string &new_path, const VolumeData::Format &new_format = VolumeData::UNKOWN);
+        void setPath(const std::string &new_path, const VolumeData::Format &new_format = VolumeData::UNKOWN, const unsigned int &width = 0U, const unsigned int &height = 0U, const unsigned int &depth = 0U);
 
 
         /** Set the new position */

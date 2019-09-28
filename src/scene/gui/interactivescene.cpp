@@ -14,29 +14,76 @@ void InteractiveScene::framebufferSizeCallback(GLFWwindow *window, int width, in
 }
 
 // GLFW mouse button callback
-void InteractiveScene::mouseButtonCallback(GLFWwindow *window, int, int action, int) {
+void InteractiveScene::mouseButtonCallback(GLFWwindow *window, int button, int action, int) {
+    // Get the mouse and set the pressed status
+    Mouse *const mouse = static_cast<InteractiveScene *>(glfwGetWindowUserPointer(window))->mouse;
 
+    // Check the enabled status
+    if (!mouse->isEnabled()) return;
+
+    // Update and check the pressed status
+    const bool pressed = action != GLFW_RELEASE;
+    mouse->setPressed(pressed);
+    if (!pressed) {
+        return;
+    }
+
+    // Get the cursor position
+    double xpos;
+    double ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+
+    // Update mouse points
+    switch (button) {
+        case GLFW_MOUSE_BUTTON_LEFT:   mouse->setRotationPoint(xpos, ypos); return;
+        case GLFW_MOUSE_BUTTON_RIGHT:
+        case GLFW_MOUSE_BUTTON_MIDDLE: mouse->setTranslationPoint(xpos, ypos);
+    }
 }
 
 // GLFW cursor callback
 void InteractiveScene::cursorPosCallback(GLFWwindow *window, double xpos, double ypos) {
+    // Get the interactive scene
+    InteractiveScene *const scene = static_cast<InteractiveScene *>(glfwGetWindowUserPointer(window));
 
+    // Check the pressed satus
+    Mouse *const mouse = scene->mouse;
+    if (!mouse->isEnabled() && !mouse->isPressed()) {
+        return;
+    }
+
+    // Rotate the volume
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        scene->volume->rotate(mouse->rotate(xpos, ypos));
+    }
+
+    // Translate the volume
+    else if ((glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) | glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE)) == GLFW_PRESS) {
+        scene->volume->translate(glm::vec3(mouse->translate(xpos, ypos), 0.0F));
+    }
 }
 
 // GLFW scroll callback
 void InteractiveScene::scrollCallback(GLFWwindow *window, double, double yoffset) {
-
+    static_cast<InteractiveScene *>(glfwGetWindowUserPointer(window))->camera->zoom(yoffset);
 }
 
 // GLFW key callback
 void InteractiveScene::keyCallback(GLFWwindow *window, int key, int, int action, int modifier) {
     // Get the pressed status
-    bool pressed = action != GLFW_RELEASE;
+    const bool pressed = action != GLFW_RELEASE;
 
     // Get the interactive scene
     InteractiveScene *const scene = static_cast<InteractiveScene *>(glfwGetWindowUserPointer(window));
 
+    // Options
     switch (key) {
+        // Toggle the camera boost
+        case GLFW_KEY_LEFT_SHIFT:
+        case GLFW_KEY_RIGHT_SHIFT:
+            Camera::setBoosted(pressed);
+            return;
+
         // Reload shaders
         case GLFW_KEY_R:
             if (pressed && (modifier == GLFW_MOD_CONTROL)) {
@@ -114,6 +161,9 @@ void InteractiveScene::mainLoop() {
         // Draw the scene and GUI
         drawScene();
         drawGUI();
+
+        // Process the keyboard input
+        processKeyboardInput();
 
         // Poll events and swap buffers
         glfwPollEvents();

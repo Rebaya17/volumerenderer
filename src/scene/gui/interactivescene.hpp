@@ -42,7 +42,7 @@ class InteractiveScene : public Scene {
         static void framebufferSizeCallback(GLFWwindow *window, int width, int height);
 
         /** GLFW mouse button callback */
-        static void mouseButtonCallback(GLFWwindow *window, int, int action, int);
+        static void mouseButtonCallback(GLFWwindow *window, int button, int action, int);
 
         /** GLFW cursor callback */
         static void cursorPosCallback(GLFWwindow *window, double xpos, double ypos);

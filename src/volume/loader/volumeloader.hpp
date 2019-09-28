@@ -36,13 +36,16 @@ class VolumeLoader {
         VolumeData *volume_data;
 
         /** Voxel data */
-        glm::uvec3 *voxel;
+        GLushort *voxel;
+
+        /** Voxel data size */
+        std::size_t size;
 
 
         // Methods
 
         /** Read file */
-        virtual bool read() = 0;
+        virtual bool read(const unsigned int &width = 0U, const unsigned int &height = 0U, const unsigned int &depth = 0U) = 0;
 
         /** Load data to the GPU */
         void load();
@@ -58,7 +61,7 @@ class VolumeLoader {
         // Static methods
 
         /** Read volume */
-        static VolumeData *load(const std::string &path, const VolumeData::Format &format = VolumeData::UNKOWN);
+        static VolumeData *load(const std::string &path, const VolumeData::Format &format = VolumeData::UNKOWN, const unsigned int &width = 0U, const unsigned int &height = 0U, const unsigned int &depth = 0U);
 };
 
 #endif // __VOLUME_LOADER_HPP_

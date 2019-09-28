@@ -4,7 +4,7 @@
 // Private methods
 
 // Read data from file
-bool PVMLoader::read() {
+bool PVMLoader::read(const unsigned int &, const unsigned int &, const unsigned int &) {
     return false;
 }
 

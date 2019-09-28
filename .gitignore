@@ -14,3 +14,4 @@ build*/
 
 # Data sets, since they are too big
 volume/*
+!volume/carp.dat

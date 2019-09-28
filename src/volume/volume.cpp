@@ -8,7 +8,7 @@
 // Load the volume from the volume path
 void Volume::load() {
     // Load the volume
-    VolumeData *volume_data = VolumeLoader::load(path, format);
+    VolumeData *volume_data = VolumeLoader::load(path, format, resolution.x, resolution.y, resolution.z);
 
     // Set the open statuses
     open = volume_data->open;
@@ -16,32 +16,34 @@ void Volume::load() {
     // Set the resolution
     resolution = volume_data->resolution;
 
+    // Set the buffers
+    vao = volume_data->vao;
+    vbo = volume_data->vbo;
+
+    // Set the texture
+    texture = volume_data->texture;
+    diagonal = glm::length(glm::vec3(resolution));
+    step = 1.0F / diagonal;
+    tex_dim = glm::vec3(resolution) / diagonal;
 
     // Clean up the loader data
+    volume_data->texture = GL_FALSE;
     delete volume_data;
 }
 
 // Makes the volume empty
 void Volume::clear() {
-    // Open statuses
     open = false;
-
-    // Resolution
-    resolution = glm::uvec3(0U);
 }
 
-// Update the volume and normal matrices
+// Update the matrices
 void Volume::updateMatrices() {
-    // Get the transformation matrices
+    // Identity matrix
     const glm::mat4 identity = glm::mat4(1.0F);
-    const glm::mat4 translation_mat = glm::translate(identity, position);
-    const glm::mat4 rotation_mat    = glm::mat4_cast(rotation);
-    const glm::mat4 scale_mat       = glm::scale(identity, dimension);
 
-    // Update the model and normal matrix
-    const glm::mat4 translation_rotation_mat = translation_mat * rotation_mat;
-    model_mat  = translation_rotation_mat * scale_mat;
-    normal_mat = glm::inverse(glm::transpose(translation_rotation_mat));
+    // Update the matrices
+    model_mat = glm::scale(glm::translate(identity, position), dimension);
+    volume_mat = glm::inverse(glm::mat4_cast(rotation) * glm::translate(glm::scale(identity, tex_dim), glm::vec3(-0.5F)));
 }
 
 // Constructor
@@ -55,12 +57,17 @@ Volume::Volume() :
 
     // Geometry
     position(0.0F),
-    rotation(glm::quat()),
+    rotation(glm::quat(1.0F, 0.0F, 0.0F, 0.0F)),
     dimension(1.0F),
+
+    // Texture
+    diagonal(0.0F),
+    step(0.0F),
+    tex_dim(0.0F),
 
     // Matrices
     model_mat(1.0F),
-    normal_mat(1.0F) {}
+    volume_mat(1.0F) {}
 
 // Volume constructor
 Volume::Volume(const std::string &path, const VolumeData::Format &format) :
@@ -71,12 +78,17 @@ Volume::Volume(const std::string &path, const VolumeData::Format &format) :
 
     // Geometry
     position(0.0F),
-    rotation(glm::quat()),
+    rotation(1.0F, 0.0F, 0.0F, 0.0F),
     dimension(1.0F),
+
+    // Texture
+    diagonal(0.0F),
+    step(0.0F),
+    tex_dim(0.0F),
 
     // Matrices
     model_mat(1.0F),
-    normal_mat(1.0F) {
+    volume_mat(1.0F) {
     // Load the volume
     load();
 }
@@ -108,18 +120,18 @@ std::string Volume::getName() const {
 
 // Get the resolution
 glm::uvec3 Volume::getResolution() const {
-    return resolution;
+    return open ? resolution : glm::uvec3();
 }
 
 
 // Get the position
 glm::vec3 Volume::getPosition() const {
-    return position;
+    return open ? position : glm::vec3();
 }
 
 // Get the rotation quaternion
 glm::quat Volume::getRotation() const {
-    return rotation;
+    return open ? rotation : glm::quat(0.0F, 0.0F, 0.0F, 1.0F);
 }
 
 // Get the rotation angles
@@ -133,14 +145,14 @@ glm::vec3 Volume::getScale() const {
 }
 
 
-// Get the volume matrix
+// Get the model matrix
 glm::mat4 Volume::getModelMatrix() const {
     return model_mat;
 }
 
-// Get the normal matrix
-glm::mat4 Volume::getNormalMatrix() const {
-    return normal_mat;
+// Get the Volume matrix
+glm::mat4 Volume::getVolumeMatrix() const {
+    return volume_mat;
 }
 
 
@@ -153,9 +165,12 @@ void Volume::setEnabled(const bool &status) {
 
 
 // Set the new path
-void Volume::setPath(const std::string &new_path, const VolumeData::Format &new_format) {
+void Volume::setPath(const std::string &new_path, const VolumeData::Format &new_format, const unsigned int &width, const unsigned int &height, const unsigned int &depth) {
     path = new_path;
     format = new_format;
+    resolution.x = width;
+    resolution.y = height;
+    resolution.z = depth;
     reload();
 }
 
@@ -195,6 +210,7 @@ void Volume::reload() {
     // Load if the path is not empty
     if (!path.empty()) {
         load();
+        resetGeometry();
     }
 }
 
@@ -202,7 +218,7 @@ void Volume::reload() {
 void Volume::resetGeometry() {
     // Set the default values
     position = glm::vec3(0.0F);
-    rotation = glm::quat();
+    rotation = glm::quat(1.0F, 0.0F, 0.0F, 0.0F);
     dimension = glm::vec3(1.0F);
 
     // Update matrices
@@ -222,11 +238,24 @@ void Volume::draw(GLSLProgram *const program) const {
 
     // Set volume uniforms
     program->setUniform("u_model_mat", model_mat);
-    program->setUniform("u_normal_mat", normal_mat);
+    program->setUniform("u_volume_mat", volume_mat);
+    program->setUniform("u_tex", GL_TEXTURE0);
 
-    // Draw the volume
+    // Bind the vertex array object and texture
+    glBindVertexArray(vao);
+    glBindTexture(GL_TEXTURE_3D, texture);
 
-    // Unbind the vertex array object
+    // Draw the volume slices
+    for (float i = -0.5F; i < 0.5F; i += step) {
+        // Set the slice position
+        program->setUniform("u_slice", i);
+
+        // Draw square
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    }
+
+    // Unbind the vertex array object and texture
+    glBindTexture(GL_TEXTURE_3D, GL_FALSE);
     glBindVertexArray(GL_FALSE);
 }
 
