@@ -65,6 +65,9 @@ Volume::Volume() :
     step(0.0F),
     tex_dim(0.0F),
 
+    // Transfer function
+    transfer_function(new TransferFunction(1U)),
+
     // Matrices
     model_mat(1.0F),
     volume_mat(1.0F) {}
@@ -85,6 +88,9 @@ Volume::Volume(const std::string &path, const VolumeData::Format &format) :
     diagonal(0.0F),
     step(0.0F),
     tex_dim(0.0F),
+
+    // Transfer function
+    transfer_function(new TransferFunction(1U)),
 
     // Matrices
     model_mat(1.0F),
@@ -142,6 +148,12 @@ glm::vec3 Volume::getRotationAngles() const {
 // Get the scale
 glm::vec3 Volume::getScale() const {
     return dimension;
+}
+
+
+// Get the transfer function
+TransferFunction *Volume::getTransferFunction() const {
+    return transfer_function;
 }
 
 
@@ -239,10 +251,14 @@ void Volume::draw(GLSLProgram *const program) const {
     // Set volume uniforms
     program->setUniform("u_model_mat", model_mat);
     program->setUniform("u_volume_mat", volume_mat);
-    program->setUniform("u_tex", GL_TEXTURE0);
+    program->setUniform("u_tex", 0);
+
+    // Bind the transfer function
+    transfer_function->bind(program);
 
     // Bind the vertex array object and texture
     glBindVertexArray(vao);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, texture);
 
     // Draw the volume slices
@@ -297,5 +313,9 @@ void Volume::scale(const glm::vec3 &factor) {
 
 // Volume destructor
 Volume::~Volume() {
+    // Clear the volume data
     clear();
+
+    // Delete the transfer function
+    delete transfer_function;
 }

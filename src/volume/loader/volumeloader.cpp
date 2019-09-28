@@ -43,7 +43,7 @@ void VolumeLoader::load() {
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, x, y, z, 0, GL_RED, bytes, voxel);
 
     // Unbind texture
-    glBindTexture(GL_TEXTURE_2D, GL_FALSE);
+    glBindTexture(GL_TEXTURE_3D, GL_FALSE);
 
 
     // Vertex array object

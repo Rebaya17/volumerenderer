@@ -1,6 +1,7 @@
 #ifndef __VOLUME_HPP_
 #define __VOLUME_HPP_
 
+#include "transferfunction.hpp"
 #include "loader/volumedata.hpp"
 #include "loader/volumeloader.hpp"
 #include "../scene/glslprogram.hpp"
@@ -42,6 +43,10 @@ class Volume : private VolumeData {
 
         /** Texture dimensions */
         glm::vec3 tex_dim;
+
+
+        /** Transfer function */
+        TransferFunction *transfer_function;
 
 
         /** Model matrix */
@@ -113,6 +118,10 @@ class Volume : private VolumeData {
 
         /** Get the scale */
         glm::vec3 getScale() const;
+
+
+        /** Get the transfer function */
+        TransferFunction *getTransferFunction() const;
 
 
         /** Get the model matrix */
