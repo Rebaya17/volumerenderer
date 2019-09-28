@@ -49,6 +49,9 @@ class TransferFunction {
         /** Bind the transfer function */
         void bind(GLSLProgram *const program);
 
+        /** Reset */
+        void reset();
+
 
         // Destructor
 

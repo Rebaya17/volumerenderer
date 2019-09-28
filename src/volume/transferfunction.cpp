@@ -23,14 +23,6 @@ TransferFunction::TransferFunction(const GLint &index) :
     // Texture attributes
     index(index),
     texture(GL_FALSE) {
-    // Initialize the data array
-    for (unsigned int i = 0, j = 0; i < 256; i++, j += 4) {
-        texture_data[j    ] = i;
-        texture_data[j + 1] = i;
-        texture_data[j + 2] = i;
-        texture_data[j + 3] = i;
-    }
-
     // Generate the texture
     glGenTextures(1, &texture);
 
@@ -45,8 +37,8 @@ TransferFunction::TransferFunction(const GLint &index) :
     // Unbind texture
     glBindTexture(GL_TEXTURE_1D, GL_FALSE);
 
-    // Update the texture data
-    update();
+    // Load the default values
+    reset();
 }
 
 
@@ -65,6 +57,20 @@ void TransferFunction::bind(GLSLProgram *const program) {
     // Bind texture
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_1D, texture);
+}
+
+// Reset
+void TransferFunction::reset() {
+    // Set the default values
+    for (unsigned int i = 0, j = 0; i < 256; i++, j += 4) {
+        texture_data[j    ] = i;
+        texture_data[j + 1] = i;
+        texture_data[j + 2] = i;
+        texture_data[j + 3] = i;
+    }
+
+    // Update the texture
+    update();
 }
 
 

@@ -33,7 +33,11 @@ void Volume::load() {
 
 // Makes the volume empty
 void Volume::clear() {
+    // Set not open
     open = false;
+
+    // Reset the transfer function
+    transfer_function->reset();
 }
 
 // Update the matrices
@@ -137,17 +141,17 @@ glm::vec3 Volume::getPosition() const {
 
 // Get the rotation quaternion
 glm::quat Volume::getRotation() const {
-    return open ? rotation : glm::quat(0.0F, 0.0F, 0.0F, 1.0F);
+    return open ? rotation : glm::quat(1.0F, 0.0F, 0.0F, 0.0F);
 }
 
 // Get the rotation angles
 glm::vec3 Volume::getRotationAngles() const {
-    return glm::degrees(glm::eulerAngles(rotation));
+    return glm::degrees(glm::eulerAngles(open ? rotation : glm::quat(1.0F, 0.0F, 0.0F, 0.0F)));
 }
 
 // Get the scale
 glm::vec3 Volume::getScale() const {
-    return dimension;
+    return open ? dimension : glm::vec3(1.0F);
 }
 
 
@@ -178,11 +182,14 @@ void Volume::setEnabled(const bool &status) {
 
 // Set the new path
 void Volume::setPath(const std::string &new_path, const VolumeData::Format &new_format, const unsigned int &width, const unsigned int &height, const unsigned int &depth) {
+    // Set the given values
     path = new_path;
     format = new_format;
     resolution.x = width;
     resolution.y = height;
     resolution.z = depth;
+
+    // Reload with the new values
     reload();
 }
 

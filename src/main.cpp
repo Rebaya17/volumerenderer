@@ -14,7 +14,7 @@ int main (int argc, char **argv) {
     }
 
     // Create the scene and check it
-    InteractiveScene *scene = new InteractiveScene("VolumeRenderers");
+    InteractiveScene *scene = new InteractiveScene("VolumeRenderer");
 
     // Exit with error if the scene is not valid
     if (!scene->isValid()) {
