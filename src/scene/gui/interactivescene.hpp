@@ -8,10 +8,29 @@
 
 class InteractiveScene : public Scene {
     private:
+        // Enumerations
+
+        /** Focus */
+        enum Focus {
+            VOLUME,
+            FUNCTION,
+            PREVIOUS,
+            NEXT,
+            ALPHA,
+            BLUE,
+            GREEN,
+            RED
+        };
+
+
         // Attributes
 
         /** Showing GUI status */
         bool showing_gui;
+
+        /** Focus */
+        InteractiveScene::Focus focus;
+
 
         /** Two pixels high */
         GLfloat height_2;
@@ -71,6 +90,10 @@ class InteractiveScene : public Scene {
 
         /** Draw the GUI */
         void drawGUI();
+
+
+        /** updateFocus */
+        void updateFocus(const glm::ivec2 &pos);
 
 
         /** Process keyboard input */

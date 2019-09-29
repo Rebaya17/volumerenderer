@@ -19,8 +19,9 @@ void InteractiveScene::framebufferSizeCallback(GLFWwindow *window, int width, in
 
 // GLFW mouse button callback
 void InteractiveScene::mouseButtonCallback(GLFWwindow *window, int button, int action, int) {
-    // Get the mouse and set the pressed status
-    Mouse *const mouse = static_cast<InteractiveScene *>(glfwGetWindowUserPointer(window))->mouse;
+    // Get the scene, mouse and set the pressed status
+    InteractiveScene *scene = static_cast<InteractiveScene *>(glfwGetWindowUserPointer(window));
+    Mouse *const mouse = scene->mouse;
 
     // Check the enabled status
     if (!mouse->isEnabled()) return;
@@ -32,10 +33,11 @@ void InteractiveScene::mouseButtonCallback(GLFWwindow *window, int button, int a
         return;
     }
 
-    // Get the cursor position
+    // Get the cursor position and update focus
     double xpos;
     double ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
+    scene->updateFocus(glm::ivec2(xpos, ypos));
 
     // Update mouse points
     switch (button) {
@@ -255,6 +257,74 @@ void InteractiveScene::drawGUI() {
     glBindVertexArray(GL_FALSE);
 }
 
+
+// updateFocus
+void InteractiveScene::updateFocus(const glm::ivec2 &pos) {
+    // Variables
+    const int x = pos.x;
+    const int y = pos.y;
+    const int left = 13;
+    const int right = width - 12;
+    int bottom = height - 4;
+    int top = bottom - 1;
+
+    // Focus on transfer function
+    top -= 74;
+    if ((x > left) && (x < right) && (y > top) && (y < bottom)) {
+        focus = InteractiveScene::FUNCTION;
+        return;
+    }
+
+    // Focus on previous node selector
+    bottom -= 69;
+    if ((x > 4) && (x < 10) && (y > top) && (y < bottom)) {
+        focus = InteractiveScene::PREVIOUS;
+        return;
+    }
+
+    // Focus on previous node selector
+    if ((x > (width - 10)) && (x < (width - 4)) && (y > top) && (y < bottom)) {
+        focus = InteractiveScene::NEXT;
+        return;
+    }
+
+    // Alpha channel
+    bottom -= 7;
+    top -= 12;
+    if ((x > left) && (x < right) && (y > top) && (y < bottom)) {
+        focus = InteractiveScene::ALPHA;
+        return;
+    }
+
+    // Blue channel
+    bottom -= 12;
+    top -= 12;
+    if ((x > left) && (x < right) && (y > top) && (y < bottom)) {
+        focus = InteractiveScene::BLUE;
+        return;
+    }
+
+    // Green channel
+    bottom -= 12;
+    top -= 12;
+    if ((x > left) && (x < right) && (y > top) && (y < bottom)) {
+        focus = InteractiveScene::GREEN;
+        return;
+    }
+
+    // Red channel
+    bottom -= 12;
+    top -= 12;
+    if ((x > left) && (x < right) && (y > top) && (y < bottom)) {
+        focus = InteractiveScene::GREEN;
+        return;
+    }
+
+    // Volume
+    focus = InteractiveScene::VOLUME;
+}
+
+
 // Process keyboard input
 void InteractiveScene::processKeyboardInput() {
     // Camera movement
@@ -276,6 +346,7 @@ InteractiveScene::InteractiveScene(const std::string &title, const int &width, c
 
     // Showing GUI status
     showing_gui(true),
+    focus(InteractiveScene::VOLUME),
 
     // Buffers
     vao(GL_FALSE),
