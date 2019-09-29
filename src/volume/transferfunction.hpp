@@ -11,9 +11,6 @@ class TransferFunction {
     private:
         // Attributes
 
-        /** Texture index */
-        GLint index;
-
         /** Texture ID */
         GLuint texture;
 
@@ -41,13 +38,13 @@ class TransferFunction {
         // Constructors
 
         /** Transfer function constructor */
-        TransferFunction(const GLint &index = 0);
+        TransferFunction();
 
 
         // Methods
 
         /** Bind the transfer function */
-        void bind(GLSLProgram *const program);
+        void bind(GLSLProgram *const program, const GLint &index = 0);
 
         /** Reset */
         void reset();

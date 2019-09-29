@@ -23,6 +23,7 @@ Camera:
 - A, D: Move the camera to the right or left (strafe)
 - Space, C: Move the camera up or down
 - Shift: Boost the camera speed
+- P: Toggle proyection (perspective/orthogonal)
 
 Mouse:
 - Left button: Rotate the volume
@@ -30,6 +31,7 @@ Mouse:
 - Wheel: Zoom
 
 Settings:
+- I: Toggle the GUI
 - F5: Reload the volume from disk
 - F6: Reload the GLSL program from disk
 

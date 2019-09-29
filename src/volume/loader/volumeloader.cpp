@@ -56,7 +56,7 @@ void VolumeLoader::load() {
 
     // XY square data to draw as triangle strip
     const GLfloat square[] = {-0.5F, -0.5F, -0.5F, 0.5F, 0.5F, -0.5F, 0.5F, 0.5F};
-    glBufferData(GL_ARRAY_BUFFER, sizeof(square), square, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 32, square, GL_STATIC_DRAW);
 
     // Position attribute
     glEnableVertexAttribArray(0);

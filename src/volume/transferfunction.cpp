@@ -19,9 +19,8 @@ void TransferFunction::update() const {
 // Constructors
 
 /** Transfer function constructor */
-TransferFunction::TransferFunction(const GLint &index) :
+TransferFunction::TransferFunction() :
     // Texture attributes
-    index(index),
     texture(GL_FALSE) {
     // Generate the texture
     glGenTextures(1, &texture);
@@ -29,7 +28,7 @@ TransferFunction::TransferFunction(const GLint &index) :
     // Bind texture
     glBindTexture(GL_TEXTURE_1D, texture);
 
-    // Textur parameters
+    // Texture parameters
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -45,11 +44,14 @@ TransferFunction::TransferFunction(const GLint &index) :
 // Methods
 
 // Bind the transfer function
-void TransferFunction::bind(GLSLProgram *const program) {
+void TransferFunction::bind(GLSLProgram *const program, const GLint &index) {
     // Check the program status
     if ((program == nullptr) || (!program->isValid())) {
         return;
     }
+
+    // Use the program
+    program->use();
 
     // Set uniform
     program->setUniform("u_trans_func", index);

@@ -97,7 +97,7 @@ Volume::Volume() :
     tex_dim(0.0F),
 
     // Transfer function
-    transfer_function(new TransferFunction(1U)),
+    transfer_function(new TransferFunction()),
 
     // Matrices
     model_mat(1.0F),
@@ -121,7 +121,7 @@ Volume::Volume(const std::string &path, const VolumeData::Format &format) :
     tex_dim(0.0F),
 
     // Transfer function
-    transfer_function(new TransferFunction(1U)),
+    transfer_function(new TransferFunction()),
 
     // Matrices
     model_mat(1.0F),
@@ -282,21 +282,23 @@ void Volume::draw(GLSLProgram *const program) const {
         return;
     }
 
+    // Bind the transfer function
+    transfer_function->bind(program);
+
     // Use the program
     program->use();
 
     // Set volume uniforms
     program->setUniform("u_model_mat", model_mat);
     program->setUniform("u_volume_mat", volume_mat);
-    program->setUniform("u_tex", 0);
+    program->setUniform("u_tex", 1);
 
-    // Bind the transfer function
-    transfer_function->bind(program);
-
-    // Bind the vertex array object and texture
-    glBindVertexArray(vao);
-    glActiveTexture(GL_TEXTURE0);
+    // Bind the texture
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_3D, texture);
+
+    // Bind the vertex array object
+    glBindVertexArray(vao);
 
     // Draw the volume slices
     for (float i = -0.5F; i < 0.5F; i += step) {
