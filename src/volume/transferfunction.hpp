@@ -5,6 +5,8 @@
 
 #include "../glad/glad.h"
 
+#include <set>
+
 
 /** The transfer function class */
 class TransferFunction {
@@ -15,7 +17,14 @@ class TransferFunction {
         GLuint texture;
 
         /** Texture data */
-        GLubyte texture_data[1024];
+        GLubyte data[1024];
+
+
+        /** Nodes */
+        std::set<GLubyte> node;
+
+        /** Current node */
+        GLubyte current_node;
 
 
         // Constructors
@@ -29,8 +38,8 @@ class TransferFunction {
 
         // Methods
 
-        /** Update the texture */
-        void update() const;
+        /** Update the function */
+        void update();
 
 
 
@@ -41,6 +50,30 @@ class TransferFunction {
         TransferFunction();
 
 
+        // Getters
+
+        /** Get the node color */
+        glm::uvec4 getNode(const GLubyte &index) const;
+
+        /** Get the current node color */
+        glm::uvec4 getCurrentNode() const;
+
+        /** Get the current node index */
+        GLubyte getCurrentNodeIndex() const;
+
+
+        // Setters
+
+        /** Set the node color */
+        void setNode(const GLubyte &index, const glm::uvec4 &color);
+
+        /** Set the current node color */
+        void setCurrentNode(const glm::uvec4 &color);
+
+        /** Set the current node index */
+        void setCurrentNodeIndex(const GLubyte &index);
+
+
         // Methods
 
         /** Bind the transfer function */
@@ -48,6 +81,20 @@ class TransferFunction {
 
         /** Reset */
         void reset();
+
+
+        /** Select the previous node as current */
+        GLubyte selectPreviousNode();
+
+        /** Select the next node as current */
+        GLubyte selectNextNode();
+
+
+        /** Remove node */
+        void removeNode(const GLubyte &index);
+
+        /** Remove the current node */
+        void removeCurrentNode();
 
 
         // Destructor
