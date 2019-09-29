@@ -39,61 +39,8 @@ void InteractiveScene::mouseButtonCallback(GLFWwindow *window, int button, int a
     glfwGetCursorPos(window, &xpos, &ypos);
     scene->updateFocus(glm::ivec2(xpos, ypos));
 
-    // Calculate the node or channel level
-    const GLubyte selected = static_cast<GLubyte>(255.0F * static_cast<float>(xpos - 14.0F) / scene->width_gui); 
-
-    // Update GUI
-    glm::vec4 color;
-    switch (scene->focus) {
-        // Nothing if the focus is in the volume
-        case VOLUME: break;
-
-        // Select the previous node
-        case PREVIOUS:
-            scene->volume->getTransferFunction()->selectPreviousNode();
-            break;
-
-        // Select the next node
-        case NEXT:
-            scene->volume->getTransferFunction()->selectNextNode();
-            break;
-
-        // Select or remove node
-        case FUNCTION:
-            switch (button) {
-                case GLFW_MOUSE_BUTTON_LEFT: scene->volume->getTransferFunction()->setCurrentNodeIndex(selected); break;
-                case GLFW_MOUSE_BUTTON_RIGHT: scene->volume->getTransferFunction()->removeCurrentNode(); break;
-            }
-            break;
-
-        // Select the alpha level
-        case ALPHA:
-            color = scene->volume->getTransferFunction()->getCurrentNode();
-            color.a = selected;
-            scene->volume->getTransferFunction()->setCurrentNode(color);
-            break;
-
-        // Select the alpha level
-        case BLUE:
-            color = scene->volume->getTransferFunction()->getCurrentNode();
-            color.b = selected;
-            scene->volume->getTransferFunction()->setCurrentNode(color);
-            break;
-
-        // Select the alpha level
-        case GREEN:
-            color = scene->volume->getTransferFunction()->getCurrentNode();
-            color.g = selected;
-            scene->volume->getTransferFunction()->setCurrentNode(color);
-            break;
-
-        // Select the alpha level
-        case RED:
-            color = scene->volume->getTransferFunction()->getCurrentNode();
-            color.r = selected;
-            scene->volume->getTransferFunction()->setCurrentNode(color);
-            break;
-    }
+    // Process mouse input
+    scene->GUIInteraction(static_cast<float>(xpos), button);
 
     // Update mouse points
     switch (button) {
@@ -110,18 +57,35 @@ void InteractiveScene::cursorPosCallback(GLFWwindow *window, double xpos, double
 
     // Check the pressed satus
     Mouse *const mouse = scene->mouse;
-    if (!mouse->isEnabled() && !mouse->isPressed()) {
+    if (!mouse->isEnabled() || !mouse->isPressed()) {
         return;
     }
 
-    // Rotate the volume
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        scene->volume->rotate(mouse->rotate(xpos, ypos));
+    // Get the pressed button
+    int button;
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+        button = GLFW_MOUSE_BUTTON_RIGHT;
+    }
+    else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        button = GLFW_MOUSE_BUTTON_LEFT;
+    }
+    else {
+        return;
     }
 
-    // Translate the volume
-    else if ((glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) | glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE)) == GLFW_PRESS) {
-        scene->volume->translate(glm::vec3(mouse->translate(xpos, ypos), 0.0F));
+    // Interaction with the GUI or volume
+    switch(scene->focus) {
+        // Volume interaction
+        case VOLUME:
+            switch (button) {
+                case GLFW_MOUSE_BUTTON_LEFT:  scene->volume->rotate(mouse->rotate(xpos, ypos)); return;
+                case GLFW_MOUSE_BUTTON_RIGHT: scene->volume->translate(glm::vec3(mouse->translate(xpos, ypos), 0.0F)); return;
+            }
+            return;
+
+        // GUI
+        default:
+            scene->GUIInteraction(static_cast<float>(xpos), button);
     }
 }
 
@@ -164,6 +128,7 @@ void InteractiveScene::keyCallback(GLFWwindow *window, int key, int, int action,
         case GLFW_KEY_F5:
             if (pressed) {
                 scene->volume->reload();
+                scene->updateTransferFunction();
             }
             return;
 
@@ -171,7 +136,8 @@ void InteractiveScene::keyCallback(GLFWwindow *window, int key, int, int action,
         case GLFW_KEY_F6:
             if (pressed) {
                 scene->program->link();
-                scene->gui_program->link();
+                scene->program_gui->link();
+                scene->program_func->link();
             }
     }
 }
@@ -190,30 +156,32 @@ void InteractiveScene::updateGUI() {
     width_2_5   =  5.0F / static_cast<GLfloat>(width);
     width_5     = 10.0F / static_cast<GLfloat>(width);
     width_8     = 16.0F / static_cast<GLfloat>(width);
+    width_13    = 26.0F / static_cast<GLfloat>(width);
     width_gui   = static_cast<GLfloat>(width - 26);
     width_scale = (width_gui) / static_cast<GLfloat>(width);
 
     // GUI data
+    const GLfloat margin_x = 1.0F - width_13;
     const GLfloat gui[] = {
-        // Vertices             // Texture coordinate
+        // Vertices                             // Texture coordinate
 
         // Transfer function and channels
-        -1.0F, -1.0F,                   0.0F,
-         1.0F, -1.0F,                   1.0F,
-        -1.0F, -1.0F + height_5,        0.0F,
+        -margin_x, -1.0F,                       0.0F,
+         margin_x, -1.0F,                       1.0F,
+        -margin_x, -1.0F + height_5,            0.0F,
 
-        -1.0F, -1.0F + height_5,        0.0F,
-         1.0F, -1.0F,                   1.0F,
-         1.0F, -1.0F + height_5,        1.0F,
+        -margin_x, -1.0F + height_5,            0.0F,
+         margin_x, -1.0F,                       1.0F,
+         margin_x, -1.0F + height_5,            1.0F,
 
          // Graph
-        -1.0F, -1.0F,                   1.0F,
-         1.0F, -1.0F,                   1.0F,
-        -1.0F, -1.0F + height_64,       1.0F,
+        -margin_x, -1.0F,                       1.0F,
+         margin_x, -1.0F,                       1.0F,
+        -margin_x, -1.0F + height_64,           1.0F,
 
-        -1.0F, -1.0F + height_64,       1.0F,
-         1.0F, -1.0F,                   1.0F,
-         1.0F, -1.0F + height_64,       1.0F,
+        -margin_x, -1.0F + height_64,           1.0F,
+         margin_x, -1.0F,                       1.0F,
+         margin_x, -1.0F + height_64,           1.0F,
 
         // Down arrow
         -1.0F,             -1.0F,               1.0F,
@@ -231,14 +199,57 @@ void InteractiveScene::updateGUI() {
         -1.0F,           -1.0F + height_5,      1.0F,
     };
 
-    // Bind the vertex buffer object
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    // Bind the GUI vertex buffer object
+    glBindVertexArray(vao_gui);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_gui);
 
-    // Update the data
+    // Update the GUI data
     glBufferSubData(GL_ARRAY_BUFFER, 0, 252, gui);
 
-    // Unbind the vertex array object
+    // Unbind the GUI vertex array object
+    glBindVertexArray(GL_FALSE);
+
+
+    // Update the transfer function
+    updateTransferFunction();
+}
+
+// Update the transfer function data
+void InteractiveScene::updateTransferFunction() const {
+    // Transfer function data
+    GLfloat func[2048];
+    const GLubyte *source = volume->getTransferFunction()->getData();
+    const GLfloat bottom = 2.0F * height_5;
+    const GLfloat height_scale = 64.0F / static_cast<GLfloat>(height);
+    for (unsigned int i = 0, j = 0; i < 1024; i += 4, j += 2) {
+        // Horizontal position
+        const GLfloat x = width_13 + (static_cast<GLfloat>(j >> 1) * width_scale / 127.5F - 1.0F);
+
+        // Red
+        func[j    ] = x;
+        func[j + 1] = bottom + (static_cast<GLfloat>(source[i]) * height_scale / 127.5F - 1.0F);
+
+        // Green
+        func[j + 512] = x;
+        func[j + 513] = bottom + (static_cast<GLfloat>(source[i + 1]) * height_scale / 127.5F - 1.0F);
+
+        // Blue
+        func[j + 1024] = x;
+        func[j + 1025] = bottom + (static_cast<GLfloat>(source[i + 2]) * height_scale / 127.5F - 1.0F);
+
+        // Alpha
+        func[j + 1536] = x;
+        func[j + 1537] = bottom + (static_cast<GLfloat>(source[i + 3]) * height_scale / 127.5F - 1.0F);
+    }
+
+    // Bind the transfer function vertex buffer object
+    glBindVertexArray(vao_func);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_func);
+
+    // Update the transfer function data
+    glBufferSubData(GL_ARRAY_BUFFER, 0, 8192, func);
+
+    // Unbind the transfer function vertex array object
     glBindVertexArray(GL_FALSE);
 }
 
@@ -255,41 +266,39 @@ void InteractiveScene::drawGUI() {
 
     // Bind the transfer function
     TransferFunction *const trans_func = volume->getTransferFunction();
-    trans_func->bind(gui_program);
+    trans_func->bind(program_gui);
 
-    // Use the program
-    gui_program->use();
+    // Use the GUI program
+    program_gui->use();
 
     // Bind the vertex array object
-    glBindVertexArray(vao);
+    glBindVertexArray(vao_gui);
 
     // Draw the transfer function
     float height = height_5;
 
-    gui_program->setUniform("u_scale", glm::vec2(width_scale, 1.0F));
-    gui_program->setUniform("u_shape", 1);
-    gui_program->setUniform("u_pos", glm::vec2(0.0F, height));
+    program_gui->setUniform("u_shape", 1);
+    program_gui->setUniform("u_pos", glm::vec2(0.0F, height));
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     // Draw the graphic
     height += height_5;
-    gui_program->setUniform("u_shape", 0);
-    gui_program->setUniform("u_color", glm::vec3(0.75F));
-    gui_program->setUniform("u_pos", glm::vec2(0.0F, height));
+    program_gui->setUniform("u_shape", 0);
+    program_gui->setUniform("u_color", glm::vec3(0.75F));
+    program_gui->setUniform("u_pos", glm::vec2(0.0F, height));
     glDrawArrays(GL_TRIANGLES, 6, 6);
 
     // Draw the node arrows
     height += height_64;
-    gui_program->setUniform("u_scale", glm::vec2(1.0F));
-    gui_program->setUniform("u_color", glm::vec3(0.0F));
-    gui_program->setUniform("u_pos", glm::vec2(width_5, height));
+    program_gui->setUniform("u_color", glm::vec3(0.0F));
+    program_gui->setUniform("u_pos", glm::vec2(width_5, height));
     glDrawArrays(GL_TRIANGLES, 15, 3);
 
-    gui_program->setUniform("u_pos", glm::vec2(2.0F * (1.0F - width_5), height));
+    program_gui->setUniform("u_pos", glm::vec2(2.0F * (1.0F - width_5), height));
     glDrawArrays(GL_TRIANGLES, 18, 3);
 
     // Draw the current node
-    gui_program->setUniform("u_pos", glm::vec2(width_5 + width_8 + static_cast<float>(trans_func->getCurrentNodeIndex()) / 127.5F * width_scale, height));
+    program_gui->setUniform("u_pos", glm::vec2(width_13 + static_cast<float>(trans_func->getCurrentNodeIndex()) / 127.5F * width_scale, height));
     glDrawArrays(GL_TRIANGLES, 12, 3);
 
     // Prepare channels
@@ -300,20 +309,44 @@ void InteractiveScene::drawGUI() {
     for (int i = 0; i < 4; i++) {
         // Bar
         height += height_5 + height_2;
-        gui_program->setUniform("u_scale", glm::vec2(width_scale, 1.0F));
-        gui_program->setUniform("u_color", color[i]);
-        gui_program->setUniform("u_pos", glm::vec2(0.0F, height));
+        program_gui->setUniform("u_color", color[i]);
+        program_gui->setUniform("u_pos", glm::vec2(0.0F, height));
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // Level
         height += height_5;
-        gui_program->setUniform("u_scale", glm::vec2(1.0F));
-        gui_program->setUniform("u_color", glm::vec3(0.0F));
-        gui_program->setUniform("u_pos", glm::vec2(width_5 + width_8 + level[3 - i], height));
+        program_gui->setUniform("u_color", glm::vec3(0.0F));
+        program_gui->setUniform("u_pos", glm::vec2(width_13 + level[3 - i], height));
         glDrawArrays(GL_TRIANGLES, 12, 3);
     }
 
-    // Unbind the vertex array object
+    // Unbind the GUI vertex array object
+    glBindVertexArray(GL_FALSE);
+
+
+    // Use the transfer function program
+    program_func->use();
+
+    // Bind the transfer function vertex array object
+    glBindVertexArray(vao_func);
+
+    // Alpha channel
+    program_func->setUniform("u_color", glm::vec3(0.0F));
+    glDrawArrays(GL_LINE_STRIP, 768, 256);
+
+    // Blue channel
+    program_func->setUniform("u_color", glm::vec3(0.0F, 0.0F, 1.0F));
+    glDrawArrays(GL_LINE_STRIP, 512, 256);
+
+    // Green channel
+    program_func->setUniform("u_color", glm::vec3(0.0F, 1.0F, 0.0F));
+    glDrawArrays(GL_LINE_STRIP, 256, 256);
+
+    // Red channel
+    program_func->setUniform("u_color", glm::vec3(1.0F, 0.0F, 0.0F));
+    glDrawArrays(GL_LINE_STRIP, 0, 256);
+
+    // Unbind the GUI vertex array object
     glBindVertexArray(GL_FALSE);
 }
 
@@ -329,7 +362,7 @@ void InteractiveScene::updateFocus(const glm::ivec2 &pos) {
     int top = bottom - 1;
 
     // Focus on transfer function
-    top -= 74;
+    top -= 76;
     if ((x > left) && (x < right) && (y > top) && (y < bottom)) {
         focus = InteractiveScene::FUNCTION;
         return;
@@ -396,6 +429,66 @@ void InteractiveScene::processKeyboardInput() {
     if (glfwGetKey(window, GLFW_KEY_C)     || glfwGetKey(window, GLFW_KEY_DOWN))  camera->travell(Camera::DOWN);
 }
 
+// Process mouse input
+void InteractiveScene::GUIInteraction(const float &xpos, const int &button) {
+    // Calculate the node or channel level
+    const GLubyte selected = static_cast<GLubyte>(255.0F * static_cast<float>(xpos - 13.0F) / width_gui); 
+
+    // Update GUI
+    glm::vec4 color;
+    switch (focus) {
+        // Nothing if the focus is in the volume
+        case VOLUME: return;
+
+        // Select the previous node
+        case PREVIOUS:
+            volume->getTransferFunction()->selectPreviousNode();
+            return;
+
+        // Select the next node
+        case NEXT:
+            volume->getTransferFunction()->selectNextNode();
+            return;
+
+        // Select or remove node
+        case FUNCTION:
+            switch (button) {
+                case GLFW_MOUSE_BUTTON_LEFT: volume->getTransferFunction()->setCurrentNodeIndex(selected); break;
+                case GLFW_MOUSE_BUTTON_RIGHT: volume->getTransferFunction()->removeCurrentNode(); break;
+            }
+            updateTransferFunction();
+            return;
+
+        // Select the alpha level
+        case ALPHA:
+            color = volume->getTransferFunction()->getCurrentNode();
+            color.a = selected;
+            break;
+
+        // Select the alpha level
+        case BLUE:
+            color = volume->getTransferFunction()->getCurrentNode();
+            color.b = selected;
+            break;
+
+        // Select the alpha level
+        case GREEN:
+            color = volume->getTransferFunction()->getCurrentNode();
+            color.g = selected;
+            break;
+
+        // Select the alpha level
+        case RED:
+            color = volume->getTransferFunction()->getCurrentNode();
+            color.r = selected;
+            break;
+    }
+
+    // Update the transfer function
+    volume->getTransferFunction()->setCurrentNode(color);
+    updateTransferFunction();
+}
+
 
 // Constructor
 
@@ -409,11 +502,14 @@ InteractiveScene::InteractiveScene(const std::string &title, const int &width, c
     focus(InteractiveScene::VOLUME),
 
     // Buffers
-    vao(GL_FALSE),
-    vbo(GL_FALSE),
+    vao_gui(GL_FALSE),
+    vao_func(GL_FALSE),
+    vbo_gui(GL_FALSE),
+    vbo_func(GL_FALSE),
 
-    // GUI program
-    gui_program(new GLSLProgram()),
+    // GLSL programs
+    program_gui(new GLSLProgram()),
+    program_func(new GLSLProgram()),
 
     // Mouse
     mouse(new Mouse(width, height)) {
@@ -428,15 +524,15 @@ InteractiveScene::InteractiveScene(const std::string &title, const int &width, c
     }
 
     // GUI vertex array object
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    glGenVertexArrays(1, &vao_gui);
+    glBindVertexArray(vao_gui);
 
     // GUI vertex buffer object
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glGenBuffers(1, &vbo_gui);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_gui);
 
-    // Load the GUI data
-    const std::size_t stride = sizeof(GLfloat) * 3;
+    // Initialize the GUI data buffer
+    std::size_t stride = sizeof(GLfloat) * 3;
     glBufferData(GL_ARRAY_BUFFER, 252, nullptr, GL_DYNAMIC_DRAW);
 
     // Vertex attribute
@@ -449,6 +545,24 @@ InteractiveScene::InteractiveScene(const std::string &title, const int &width, c
 
     // Unbind vertex array object
     glBindVertexArray(GL_FALSE);
+
+
+    // Transfer function unction vertex array object
+    glGenVertexArrays(1, &vao_func);
+    glBindVertexArray(vao_func);
+
+    // Transfer function vertex buffer object
+    glGenBuffers(1, &vbo_func);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_func);
+
+    // Initialize the transfer function data buffer
+    stride = sizeof(GLfloat) << 1;
+    glBufferData(GL_ARRAY_BUFFER, 8192, nullptr, GL_DYNAMIC_DRAW);
+
+    // Vertex attribute
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, nullptr);
+
 
     // Update the gui data
     updateGUI();
@@ -465,7 +579,12 @@ bool InteractiveScene::isShowingGUI() const {
 
 // Get the GUI program
 GLSLProgram *InteractiveScene::getGUIProgram() const {
-    return gui_program;
+    return program_gui;
+}
+
+// Get the transfer function program
+GLSLProgram *InteractiveScene::getTransferFunctionProgram() const {
+    return program_func;
 }
 
 // Get the mouse
@@ -521,11 +640,16 @@ void InteractiveScene::mainLoop() {
 // Interactive scene destructor
 InteractiveScene::~InteractiveScene() {
     // Buffers
-    glDeleteBuffers(1, &vbo);
-    glDeleteBuffers(1, &vao);
+    glDeleteBuffers(1, &vbo_gui);
+    glDeleteBuffers(1, &vbo_func);
 
-    // GUI program
-    delete gui_program;
+    // Bertex arrays
+    glDeleteVertexArrays(1, &vao_gui);
+    glDeleteVertexArrays(1, &vao_func);
+
+    // Programs
+    delete program_gui;
+    delete program_func;
 
     // Delete the mouse
     delete mouse;

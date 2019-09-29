@@ -31,6 +31,9 @@ void Volume::load() {
     volume_data->vbo = GL_FALSE;
     volume_data->texture = GL_FALSE;
     delete volume_data;
+
+    // Reset the transfer function
+    transfer_function->reset();
 }
 
 // Makes the volume empty
@@ -62,9 +65,6 @@ void Volume::clear() {
     step = 1.0F;
     diagonal = 0.0F;
     tex_dim = glm::vec3(0.0F);
-
-    // Reset the transfer function
-    transfer_function->reset();
 }
 
 // Update the matrices

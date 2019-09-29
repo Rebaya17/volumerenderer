@@ -102,6 +102,11 @@ GLubyte TransferFunction::getCurrentNodeIndex() const{
     return current_node;
 }
 
+// Get the function data
+const GLubyte *TransferFunction::getData() const {
+    return data;
+}
+
 
 // Setters
 

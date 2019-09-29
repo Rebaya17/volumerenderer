@@ -61,6 +61,9 @@ class TransferFunction {
         /** Get the current node index */
         GLubyte getCurrentNodeIndex() const;
 
+        /** Get the function data */
+        const GLubyte *getData() const;
+
 
         // Setters
 

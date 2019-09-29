@@ -33,8 +33,9 @@ int main (int argc, char **argv) {
     const std::string volume_path = relative + ".." + DIR_SEP + "volume" + DIR_SEP;
     const std::string shader_path = relative + ".." + DIR_SEP + "shader" + DIR_SEP;
 
-    // Set the GUI program
+    // Setup the interactive scene programs
     scene->getGUIProgram()->link(shader_path + "gui.vert.glsl", shader_path + "gui.frag.glsl");
+    scene->getTransferFunctionProgram()->link(shader_path + "func.vert.glsl", shader_path + "func.frag.glsl");
 
     // Set the program and volume
     scene->getProgram()->link(shader_path + "vap.vert.glsl", shader_path + "vap.frag.glsl");

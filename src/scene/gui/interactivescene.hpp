@@ -44,6 +44,9 @@ class InteractiveScene : public Scene {
         /** Sixty-four pixels height */
         GLfloat height_64;
 
+        /** Height scale */
+        GLfloat height_scale;
+
         /** Two and half pixels wide */
         GLfloat width_2_5;
 
@@ -53,6 +56,9 @@ class InteractiveScene : public Scene {
         /** Eight pixels wide */
         GLfloat width_8;
 
+        /** Thirteen pixels wide */
+        GLfloat width_13;
+
         /** Width of the GUI */
         GLfloat width_gui;
 
@@ -60,15 +66,24 @@ class InteractiveScene : public Scene {
         GLfloat width_scale;
 
 
-        /** Vertex array object */
-        GLuint vao;
+        /** Vertex array object for the GUI */
+        GLuint vao_gui;
 
-        /** Vertex buffer object */
-        GLuint vbo;
+        /** Vertex array object for the transfer function */
+        GLuint vao_func;
+
+        /** Vertex buffer object for the GUI */
+        GLuint vbo_gui;
+
+        /** Vertex buffer object for the transfer function */
+        GLuint vbo_func;
 
 
         /** GUI program */
-        GLSLProgram *gui_program;
+        GLSLProgram *program_gui;
+
+        /** Transfer function program */
+        GLSLProgram *program_func;
 
         /** Mouse */
         Mouse *const mouse;
@@ -91,6 +106,9 @@ class InteractiveScene : public Scene {
         /** Update the GUI data */
         void updateGUI();
 
+        /** Update the transfer function data */
+        void updateTransferFunction() const;
+
         /** Draw the GUI */
         void drawGUI();
 
@@ -101,6 +119,9 @@ class InteractiveScene : public Scene {
 
         /** Process keyboard input */
         void processKeyboardInput();
+
+        /** Process mouse input */
+        void GUIInteraction(const float &xpos, const int &button);
 
 
         // Static methods
@@ -135,6 +156,9 @@ class InteractiveScene : public Scene {
 
         /** Get the GUI program */
         GLSLProgram *getGUIProgram() const;
+
+        /** Get the transfer function program */
+        GLSLProgram *getTransferFunctionProgram() const;
 
         /** Get the mouse */
         Mouse *getMouse() const;
