@@ -39,6 +39,62 @@ void InteractiveScene::mouseButtonCallback(GLFWwindow *window, int button, int a
     glfwGetCursorPos(window, &xpos, &ypos);
     scene->updateFocus(glm::ivec2(xpos, ypos));
 
+    // Calculate the node or channel level
+    const GLubyte selected = static_cast<GLubyte>(255.0F * static_cast<float>(xpos - 14.0F) / scene->width_gui); 
+
+    // Update GUI
+    glm::vec4 color;
+    switch (scene->focus) {
+        // Nothing if the focus is in the volume
+        case VOLUME: break;
+
+        // Select the previous node
+        case PREVIOUS:
+            scene->volume->getTransferFunction()->selectPreviousNode();
+            break;
+
+        // Select the next node
+        case NEXT:
+            scene->volume->getTransferFunction()->selectNextNode();
+            break;
+
+        // Select or remove node
+        case FUNCTION:
+            switch (button) {
+                case GLFW_MOUSE_BUTTON_LEFT: scene->volume->getTransferFunction()->setCurrentNodeIndex(selected); break;
+                case GLFW_MOUSE_BUTTON_RIGHT: scene->volume->getTransferFunction()->removeCurrentNode(); break;
+            }
+            break;
+
+        // Select the alpha level
+        case ALPHA:
+            color = scene->volume->getTransferFunction()->getCurrentNode();
+            color.a = selected;
+            scene->volume->getTransferFunction()->setCurrentNode(color);
+            break;
+
+        // Select the alpha level
+        case BLUE:
+            color = scene->volume->getTransferFunction()->getCurrentNode();
+            color.b = selected;
+            scene->volume->getTransferFunction()->setCurrentNode(color);
+            break;
+
+        // Select the alpha level
+        case GREEN:
+            color = scene->volume->getTransferFunction()->getCurrentNode();
+            color.g = selected;
+            scene->volume->getTransferFunction()->setCurrentNode(color);
+            break;
+
+        // Select the alpha level
+        case RED:
+            color = scene->volume->getTransferFunction()->getCurrentNode();
+            color.r = selected;
+            scene->volume->getTransferFunction()->setCurrentNode(color);
+            break;
+    }
+
     // Update mouse points
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT:   mouse->setRotationPoint(xpos, ypos); return;
@@ -134,7 +190,8 @@ void InteractiveScene::updateGUI() {
     width_2_5   =  5.0F / static_cast<GLfloat>(width);
     width_5     = 10.0F / static_cast<GLfloat>(width);
     width_8     = 16.0F / static_cast<GLfloat>(width);
-    width_scale = (static_cast<GLfloat>(width) - 26.0F) / static_cast<GLfloat>(width);
+    width_gui   = static_cast<GLfloat>(width - 26);
+    width_scale = (width_gui) / static_cast<GLfloat>(width);
 
     // GUI data
     const GLfloat gui[] = {
@@ -197,7 +254,8 @@ void InteractiveScene::drawGUI() {
     glDisable(GL_BLEND);
 
     // Bind the transfer function
-    volume->getTransferFunction()->bind(gui_program);
+    TransferFunction *const trans_func = volume->getTransferFunction();
+    trans_func->bind(gui_program);
 
     // Use the program
     gui_program->use();
@@ -220,7 +278,7 @@ void InteractiveScene::drawGUI() {
     gui_program->setUniform("u_pos", glm::vec2(0.0F, height));
     glDrawArrays(GL_TRIANGLES, 6, 6);
 
-    // Draw the node arrows and selector
+    // Draw the node arrows
     height += height_64;
     gui_program->setUniform("u_scale", glm::vec2(1.0F));
     gui_program->setUniform("u_color", glm::vec3(0.0F));
@@ -230,11 +288,13 @@ void InteractiveScene::drawGUI() {
     gui_program->setUniform("u_pos", glm::vec2(2.0F * (1.0F - width_5), height));
     glDrawArrays(GL_TRIANGLES, 18, 3);
 
-    gui_program->setUniform("u_pos", glm::vec2(width_5 + width_8, height));
+    // Draw the current node
+    gui_program->setUniform("u_pos", glm::vec2(width_5 + width_8 + static_cast<float>(trans_func->getCurrentNodeIndex()) / 127.5F * width_scale, height));
     glDrawArrays(GL_TRIANGLES, 12, 3);
 
     // Prepare channels
     static const glm::vec3 color[] = {glm::vec3(1.0F), glm::vec3(0.0F, 0.0F, 1.0F), glm::vec3(0.0F, 1.0F, 0.0F), glm::vec3(1.0F, 0.0F, 0.0F)};
+    const glm::vec4 level = glm::vec4(trans_func->getCurrentNode()) / 127.5F * width_scale;
 
     // Draw channels
     for (int i = 0; i < 4; i++) {
@@ -249,7 +309,7 @@ void InteractiveScene::drawGUI() {
         height += height_5;
         gui_program->setUniform("u_scale", glm::vec2(1.0F));
         gui_program->setUniform("u_color", glm::vec3(0.0F));
-        gui_program->setUniform("u_pos", glm::vec2(width_5 + width_8, height));
+        gui_program->setUniform("u_pos", glm::vec2(width_5 + width_8 + level[3 - i], height));
         glDrawArrays(GL_TRIANGLES, 12, 3);
     }
 
@@ -316,7 +376,7 @@ void InteractiveScene::updateFocus(const glm::ivec2 &pos) {
     bottom -= 12;
     top -= 12;
     if ((x > left) && (x < right) && (y > top) && (y < bottom)) {
-        focus = InteractiveScene::GREEN;
+        focus = InteractiveScene::RED;
         return;
     }
 

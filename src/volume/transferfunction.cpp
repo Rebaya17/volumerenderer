@@ -123,15 +123,7 @@ void TransferFunction::setNode(const GLubyte &index, const glm::uvec4 &color){
 
 // Set the current node color
 void TransferFunction::setCurrentNode(const glm::uvec4 &color){
-    // Set the color
-    const unsigned int i = static_cast<unsigned int>(current_node) << 2;
-    data[i]     = glm::clamp(color.r, 0U, 255U);
-    data[i + 1] = glm::clamp(color.g, 0U, 255U);
-    data[i + 2] = glm::clamp(color.b, 0U, 255U);
-    data[i + 3] = glm::clamp(color.a, 0U, 255U);
-
-    // Update the function
-    update();
+    setNode(current_node, color);
 }
 
 // Set the current node index
@@ -180,7 +172,7 @@ void TransferFunction::reset() {
     // Select the first node
     current_node = 0U;
 
-    // Update the texture
+    // Update the function
     update();
 }
 
@@ -230,8 +222,9 @@ void TransferFunction::removeNode(const GLubyte &index) {
         return;
     }
 
-    // Remove node
+    // Remove node and update function
     node.erase(index);
+    update();
 }
 
 // Remove the current node
@@ -250,6 +243,9 @@ void TransferFunction::removeCurrentNode() {
     const GLubyte new_current = *(std::next(index) == node.end() ? --index : ++index);
     node.erase(current_node);
     current_node = new_current;
+
+    // Update the function
+    update();
 }
 
 

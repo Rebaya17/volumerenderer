@@ -26,8 +26,13 @@ Camera:
 - P: Toggle proyection (perspective/orthogonal)
 
 Mouse:
-- Left button: Rotate the volume
-- Right button: Translate the volume
+- Left button:
+  - Volume: Rotate
+  - Channel: Set value
+  - Transfer function: Select node
+- Right button:
+  - Volume: Translate
+  - Transfer function: Remove current node
 - Wheel: Zoom
 
 Settings:

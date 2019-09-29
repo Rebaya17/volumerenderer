@@ -53,6 +53,9 @@ class InteractiveScene : public Scene {
         /** Eight pixels wide */
         GLfloat width_8;
 
+        /** Width of the GUI */
+        GLfloat width_gui;
+
         /** Width scale */
         GLfloat width_scale;
 
