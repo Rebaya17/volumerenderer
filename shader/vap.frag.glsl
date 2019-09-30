@@ -16,6 +16,5 @@ in vec3 tex_coord;
 // Main function
 void main () {
     // Get the data from the texture and map to the transfer function
-    float val = texture(u_tex, tex_coord).r;
-    color = texture(u_trans_func, val);
+    color = texture(u_trans_func, texture(u_tex, tex_coord).r);
 }

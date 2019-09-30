@@ -61,6 +61,10 @@ void Scene::drawScene() {
     // Clear color and depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Enable the depth test and blend
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+
     // Check the volume
     if (volume->isOpen()) {
         camera->bind(program);
@@ -159,11 +163,7 @@ Scene::Scene(const std::string &title, const int &width, const int &height, cons
             // Setup the swap interval
             glfwSwapInterval(1);
 
-            // Enable depth test
-            glEnable(GL_DEPTH_TEST);
-
-            // Enable blend
-            glEnable(GL_BLEND);
+            // Set the blend function
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
     }

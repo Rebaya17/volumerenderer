@@ -22,10 +22,10 @@ void main() {
     // Homogeneous quad
     vec4 quad = vec4(l_quad.x, l_quad.y, u_slice, 1.0F);
 
-    // Set out variables
+    // Set the texture coordinates and swap the t axis
     tex_coord = (u_volume_mat * quad).stp;
     tex_coord.t = 1.0F - tex_coord.t;
 
-    // Set vertex position
+    // Set the vertex position
     gl_Position = u_projection_mat * u_view_mat * u_model_mat * quad;
 }

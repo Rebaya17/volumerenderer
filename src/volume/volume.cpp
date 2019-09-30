@@ -27,13 +27,44 @@ void Volume::load() {
     tex_dim = glm::vec3(resolution) / diagonal;
 
     // Clean up the loader data
+    volume_data->vao = GL_FALSE;
+    volume_data->vbo = GL_FALSE;
     volume_data->texture = GL_FALSE;
     delete volume_data;
+
+    // Reset the transfer function
+    transfer_function->reset();
 }
 
 // Makes the volume empty
 void Volume::clear() {
+    // Set not open
     open = false;
+
+    // Clear path
+    path.clear();
+
+    // Geometry
+    position = glm::vec3(0.0F);
+    rotation = glm::quat(1.0F, 0.0F, 0.0F, 0.0F);
+    dimension = glm::vec3(1.0F);
+
+    // Buffers
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &vao);
+
+    // Reset buffers
+    vao = GL_FALSE;
+    vbo = GL_FALSE;
+
+    // Texture
+    glDeleteTextures(1, &texture);
+    texture = GL_FALSE;
+
+    // Texture attributes
+    step = 1.0F;
+    diagonal = 0.0F;
+    tex_dim = glm::vec3(0.0F);
 }
 
 // Update the matrices
@@ -62,11 +93,11 @@ Volume::Volume() :
 
     // Texture
     diagonal(0.0F),
-    step(0.0F),
+    step(1.0F),
     tex_dim(0.0F),
 
     // Transfer function
-    transfer_function(new TransferFunction(1U)),
+    transfer_function(new TransferFunction()),
 
     // Matrices
     model_mat(1.0F),
@@ -86,11 +117,11 @@ Volume::Volume(const std::string &path, const VolumeData::Format &format) :
 
     // Texture
     diagonal(0.0F),
-    step(0.0F),
+    step(1.0F),
     tex_dim(0.0F),
 
     // Transfer function
-    transfer_function(new TransferFunction(1U)),
+    transfer_function(new TransferFunction()),
 
     // Matrices
     model_mat(1.0F),
@@ -126,18 +157,18 @@ std::string Volume::getName() const {
 
 // Get the resolution
 glm::uvec3 Volume::getResolution() const {
-    return open ? resolution : glm::uvec3();
+    return resolution;
 }
 
 
 // Get the position
 glm::vec3 Volume::getPosition() const {
-    return open ? position : glm::vec3();
+    return position;
 }
 
 // Get the rotation quaternion
 glm::quat Volume::getRotation() const {
-    return open ? rotation : glm::quat(0.0F, 0.0F, 0.0F, 1.0F);
+    return rotation;
 }
 
 // Get the rotation angles
@@ -178,12 +209,21 @@ void Volume::setEnabled(const bool &status) {
 
 // Set the new path
 void Volume::setPath(const std::string &new_path, const VolumeData::Format &new_format, const unsigned int &width, const unsigned int &height, const unsigned int &depth) {
+    // Clear the volume data
+    clear();
+
+    // Set the given values
     path = new_path;
     format = new_format;
     resolution.x = width;
     resolution.y = height;
     resolution.z = depth;
-    reload();
+
+    // Load if the path is not empty
+    if (!path.empty()) {
+        load();
+        resetGeometry();
+    }
 }
 
 
@@ -216,9 +256,6 @@ void Volume::setScale(const glm::vec3 &new_scale) {
 
 // Reload volume
 void Volume::reload() {
-    // Clear the volume data
-    clear();
-
     // Load if the path is not empty
     if (!path.empty()) {
         load();
@@ -245,21 +282,23 @@ void Volume::draw(GLSLProgram *const program) const {
         return;
     }
 
+    // Bind the transfer function
+    transfer_function->bind(program);
+
     // Use the program
     program->use();
 
     // Set volume uniforms
     program->setUniform("u_model_mat", model_mat);
     program->setUniform("u_volume_mat", volume_mat);
-    program->setUniform("u_tex", 0);
+    program->setUniform("u_tex", 1);
 
-    // Bind the transfer function
-    transfer_function->bind(program);
-
-    // Bind the vertex array object and texture
-    glBindVertexArray(vao);
-    glActiveTexture(GL_TEXTURE0);
+    // Bind the texture
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_3D, texture);
+
+    // Bind the vertex array object
+    glBindVertexArray(vao);
 
     // Draw the volume slices
     for (float i = -0.5F; i < 0.5F; i += step) {

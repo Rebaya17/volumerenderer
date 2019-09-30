@@ -8,7 +8,82 @@
 
 class InteractiveScene : public Scene {
     private:
+        // Enumerations
+
+        /** Focus */
+        enum Focus {
+            VOLUME,
+            FUNCTION,
+            PREVIOUS,
+            NEXT,
+            ALPHA,
+            BLUE,
+            GREEN,
+            RED
+        };
+
+
         // Attributes
+
+        /** Showing GUI status */
+        bool showing_gui;
+
+        /** Focus */
+        InteractiveScene::Focus focus;
+
+
+        /** Two pixels high */
+        GLfloat height_2;
+
+        /** Two and half pixels high */
+        GLfloat height_2_5;
+
+        /** Five pixels height */
+        GLfloat height_5;
+
+        /** Sixty-four pixels height */
+        GLfloat height_64;
+
+        /** Height scale */
+        GLfloat height_scale;
+
+        /** Two and half pixels wide */
+        GLfloat width_2_5;
+
+        /** Five pixels wide */
+        GLfloat width_5;
+
+        /** Eight pixels wide */
+        GLfloat width_8;
+
+        /** Thirteen pixels wide */
+        GLfloat width_13;
+
+        /** Width of the GUI */
+        GLfloat width_gui;
+
+        /** Width scale */
+        GLfloat width_scale;
+
+
+        /** Vertex array object for the GUI */
+        GLuint vao_gui;
+
+        /** Vertex array object for the transfer function */
+        GLuint vao_func;
+
+        /** Vertex buffer object for the GUI */
+        GLuint vbo_gui;
+
+        /** Vertex buffer object for the transfer function */
+        GLuint vbo_func;
+
+
+        /** GUI program */
+        GLSLProgram *program_gui;
+
+        /** Transfer function program */
+        GLSLProgram *program_func;
 
         /** Mouse */
         Mouse *const mouse;
@@ -28,12 +103,25 @@ class InteractiveScene : public Scene {
 
         // Methods
 
+        /** Update the GUI data */
+        void updateGUI();
+
+        /** Update the transfer function data */
+        void updateTransferFunction() const;
+
         /** Draw the GUI */
         void drawGUI();
 
 
+        /** updateFocus */
+        void updateFocus(const glm::ivec2 &pos);
+
+
         /** Process keyboard input */
         void processKeyboardInput();
+
+        /** Process mouse input */
+        void GUIInteraction(const float &xpos, const int &button);
 
 
         // Static methods
@@ -63,8 +151,23 @@ class InteractiveScene : public Scene {
 
         // Getters
 
+        /** Get the showing fui status */
+        bool isShowingGUI() const;
+
+        /** Get the GUI program */
+        GLSLProgram *getGUIProgram() const;
+
+        /** Get the transfer function program */
+        GLSLProgram *getTransferFunctionProgram() const;
+
         /** Get the mouse */
         Mouse *getMouse() const;
+
+
+        // Setters
+
+        /** Set the showing GUI status */
+        void showGUI(const bool &status);
 
 
         // Methods
