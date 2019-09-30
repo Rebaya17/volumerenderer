@@ -14,7 +14,7 @@ Another volume data set renderer.
 - [ ] Ray casting
   - [ ] CPU
   - [ ] GPU
-- [ ] Built-in transfer function GUI editor
+- [x] Built-in transfer function GUI editor
 
 
 ## Controls
@@ -49,8 +49,9 @@ but they can be found in the next links:
   - https://graphics.stanford.edu/data/voldata/
   - http://schorsch.efi.fh-nuernberg.de/data/volume/
 
-Anyway, the [`carp.dat`] file in raw format _(256x256x512, 16 bits, ~64MB)_ was
-included into the [`volume`] folder and is loaded by default.
+Anyway, the next files was included into the [`volume`] folder:
+- [`foot.dat`]: RAW, 256x256x256, 8bits, ~16MB _(loaded by default)_
+- [`carp.dat`]: RAW, 256x256x512, 16 bits, ~64MB
 
 
 # Dependencies
@@ -62,6 +63,7 @@ included into the [`volume`] folder and is loaded by default.
 
 [//]: # "Links references"
 [`carp.dat`]: volume/carp.dat
+[`foot.dat`]: volume/foot.dat
 [`volume`]: volume
 
 [GLFW]: https://www.glfw.org/
